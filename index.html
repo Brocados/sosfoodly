@@ -1261,13 +1261,15 @@
 
     <script>
         // ===== CONFIGURAÇÃO DA API =====
-        const API_CONFIG = {
-            baseUrl: window.location.origin,
-            jsonbinConfig: {
-                binId: '68d845acae596e708ffdff50',
-                apiKey: '$2a$10$dk861I8m/eijJrsa4fa8mu8y1h1fZf8LgxilOkEvmxQEiUH6p11o6'
-            }
-        };
+       const API_CONFIG = {
+           baseUrl: window.location.hostname.includes("localhost")
+           ? "http://localhost:3001"                // porta local do seu server.js
+           : "https://0ac194ab0e93.ngrok-free.app", // URL do ngrok
+           jsonbinConfig: {
+               binId: "68d845acae596e708ffdff50",
+               apiKey: "$2a$10$dk861I8m/eijJrsa4fa8mu8y1h1fZf8LgxilOkEvmxQEiUH6p11o6"
+           }
+       };
 
         // Dados globais
         let menuData = {};
