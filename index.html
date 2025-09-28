@@ -285,6 +285,7 @@
             border-radius: 10px;
             overflow: hidden;
             border: 1px solid #e0e0e0;
+            flex-wrap: wrap;
         }
         
         .size-option {
@@ -295,6 +296,7 @@
             transition: all 0.3s ease;
             font-weight: bold;
             position: relative;
+            min-width: 80px;
         }
         
         .size-option:not(:last-child) {
@@ -1053,6 +1055,24 @@
             color: var(--gray);
             margin-top: 5px;
         }
+        
+        .system-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        
+        .last-update {
+            font-size: 0.8rem;
+            color: var(--gray);
+            text-align: center;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -1066,6 +1086,11 @@
                 <span id="restaurant-name">Brocados.com</span>
             </div>
             <p class="tagline">Sabor que conquista, preço que surpreende!</p>
+            <div class="system-status">
+                <i class="fas fa-sync-alt fa-spin"></i>
+                <span id="connection-status">Conectado ao sistema</span>
+            </div>
+            <div class="last-update" id="last-update"></div>
         </header>
         
         <div class="menu-categories">
@@ -1235,476 +1260,527 @@
     </div>
 
     <script>
-    // ===== CONFIGURAÇÃO DA API =====
-    const API_CONFIG = {
-        baseUrl: window.location.origin,
-        jsonbinConfig: {
-            binId: '68d845acae596e708ffdff50',
-            apiKey: '$2a$10$dk861I8m/eijJrsa4fa8mu8y1h1fZf8LgxilOkEvmxQEiUH6p11o6'
-        }
-    };
-
-    // Dados globais
-    let menuData = {};
-    let restaurantConfig = {};
-    let cart = [];
-    let currentOrder = null;
-    let paymentCheckInterval = null;
-    let countdownInterval = null;
-
-    // ===== FUNÇÕES DA API =====
-    async function fetchDataFromAPI() {
-        try {
-            // Usando fetch direto para o JSONBin com X-Master-Key
-            const response = await fetch(`https://api.jsonbin.io/v3/b/${API_CONFIG.jsonbinConfig.binId}/latest`, {
-                headers: {
-                    'X-Master-Key': API_CONFIG.jsonbinConfig.apiKey,
-                    'X-Bin-Meta': 'false'
-                }
-            });
-            
-            if (!response.ok) throw new Error('Erro ao buscar dados');
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.warn('Erro ao buscar dados do JSONBin:', error);
-            return getDefaultData();
-        }
-    }
-
-    function getDefaultData() {
-        return {
-            menuData: {
-                pizzas: [
-                    { id: 1, name: "Margherita", description: "Molho de tomate, mussarela, manjericão fresco", prices: { P: 25.90, M: 35.90, G: 45.90 }, available: true },
-                    { id: 2, name: "Calabresa", description: "Molho de tomate, mussarela, calabresa fatiada, cebola", prices: { P: 28.90, M: 38.90, G: 48.90 }, available: true }
-                ],
-                bebidas: [],
-                sobremesas: [],
-                outros: []
-            },
-            restaurantConfig: {
-                restaurantName: "Brocados.com",
-                whatsappNumber: "5585986063698",
-                deliveryFee: 5.00,
-                openingHours: "18:00-23:00",
-                storeStatus: "open",
-                paymentConfig: {
-                    pixKey: "israelgustavo159@gmail.com",
-                    qrExpireMinutes: 10,
-                    redirectWhatsapp: "5585986063698",
-                    paymentProvider: "simulated"
-                },
-                orderTimes: {
-                    deliveryMinutes: 50,
-                    pickupMinutes: 20
-                }
-            },
-            orders: [],
-            lastUpdated: new Date().toISOString()
+        // ===== CONFIGURAÇÃO DA API =====
+        const API_CONFIG = {
+            baseUrl: window.location.origin,
+            jsonbinConfig: {
+                binId: '68d845acae596e708ffdff50',
+                apiKey: '$2a$10$dk861I8m/eijJrsa4fa8mu8y1h1fZf8LgxilOkEvmxQEiUH6p11o6'
+            }
         };
-    }
 
-    async function createOrder(orderData) {
-        try {
-            const response = await fetch(`${API_CONFIG.baseUrl}/api/orders`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(orderData)
-            });
-            return await response.json();
-        } catch (error) {
-            console.error('Erro ao criar pedido:', error);
-            return null;
-        }
-    }
+        // Dados globais
+        let menuData = {};
+        let restaurantConfig = {};
+        let cart = [];
+        let currentOrder = null;
+        let paymentCheckInterval = null;
+        let countdownInterval = null;
+        let dataRefreshInterval = null;
 
-    async function checkPaymentStatus(orderId) {
-        try {
-            const response = await fetch(`${API_CONFIG.baseUrl}/api/payment/confirm`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId })
-            });
-            return await response.json();
-        } catch (error) {
-            console.error('Erro ao verificar pagamento:', error);
-            return null;
-        }
-    }
-
-    // ===== FUNÇÕES PRINCIPAIS =====
-    function formatPrice(price) {
-        return `R$ ${price.toFixed(2).replace('.', ',')}`;
-    }
-
-    function showNotification(message, type) {
-        const notification = document.getElementById('notification');
-        notification.textContent = message;
-        notification.className = `notification ${type}`;
-        
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            setTimeout(() => { notification.className = 'notification'; }, 300);
-        }, 3000);
-    }
-
-    function updateUIFromConfig() {
-        document.getElementById('restaurant-name').textContent = restaurantConfig.restaurantName;
-        document.getElementById('delivery-fee-value').textContent = restaurantConfig.deliveryFee.toFixed(2).replace('.', ',');
-        document.getElementById('delivery-fee-modal').textContent = restaurantConfig.deliveryFee.toFixed(2).replace('.', ',');
-        
-        const statusBadge = document.getElementById('status-badge');
-        const statusText = document.getElementById('status-text');
-        const checkoutBtn = document.getElementById('checkout-btn');
-        
-        if (restaurantConfig.storeStatus === 'closed') {
-            statusBadge.className = 'status-badge closed';
-            statusText.textContent = 'Fechado';
-            checkoutBtn.disabled = true;
-            checkoutBtn.innerHTML = '<i class="fas fa-store-slash"></i> Loja Fechada';
-        } else {
-            statusBadge.className = 'status-badge';
-            statusText.textContent = 'Aberto';
-            checkoutBtn.disabled = false;
-            checkoutBtn.innerHTML = '<i class="fas fa-qrcode"></i> Finalizar com PIX';
-        }
-    }
-
-    // ===== SISTEMA DE CARDÁPIO =====
-    function renderMenuItems(category) {
-        const container = document.getElementById(`${category}-items`);
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        if (!menuData[category] || menuData[category].length === 0) {
-            container.innerHTML = '<div class="empty-cart">Nenhum item disponível nesta categoria</div>';
-            return;
-        }
-        
-        menuData[category].forEach(item => {
-            const itemElement = document.createElement('div');
-            itemElement.className = `menu-item ${!item.available ? 'item-unavailable' : ''}`;
-            
-            const isPizza = item.prices !== undefined;
-            
-            if (isPizza) {
-                itemElement.innerHTML = `
-                    <div class="item-name">
-                        <span>${item.name}</span>
-                        <span class="item-price" id="price-${item.id}">${formatPrice(item.prices.M)}</span>
-                    </div>
-                    <div class="item-description">${item.description}</div>
-                    <div class="pizza-sizes">
-                        <div class="size-option active" data-size="P" data-item="${item.id}">
-                            <span class="size-label">Pequena</span>
-                            <span class="size-price">${formatPrice(item.prices.P)}</span>
-                        </div>
-                        <div class="size-option" data-size="M" data-item="${item.id}">
-                            <span class="size-label">Média</span>
-                            <span class="size-price">${formatPrice(item.prices.M)}</span>
-                        </div>
-                        <div class="size-option" data-size="G" data-item="${item.id}">
-                            <span class="size-label">Grande</span>
-                            <span class="size-price">${formatPrice(item.prices.G)}</span>
-                        </div>
-                    </div>
-                    <button class="add-to-cart" data-id="${item.id}" data-size="M" ${!item.available ? 'disabled' : ''}>
-                        <i class="fas fa-cart-plus"></i> ${item.available ? 'Adicionar ao Carrinho' : 'Indisponível'}
-                    </button>
-                `;
-            } else {
-                itemElement.innerHTML = `
-                    <div class="item-name">
-                        <span>${item.name}</span>
-                        <span class="item-price">${formatPrice(item.price)}</span>
-                    </div>
-                    <div class="item-description">${item.description}</div>
-                    <button class="add-to-cart" data-id="${item.id}" ${!item.available ? 'disabled' : ''}>
-                        <i class="fas fa-cart-plus"></i> ${item.available ? 'Adicionar ao Carrinho' : 'Indisponível'}
-                    </button>
-                `;
+        // ===== SISTEMA DE LOGS =====
+        class AppLogger {
+            static info(message) {
+                console.log(`📱 [APP] ${new Date().toISOString()}: ${message}`);
             }
             
-            container.appendChild(itemElement);
-        });
-        
-        // Event listeners para tamanhos de pizza
-        document.querySelectorAll(`#${category}-items .size-option`).forEach(option => {
-            option.addEventListener('click', function() {
-                if (this.classList.contains('active')) return;
+            static error(message, error = null) {
+                console.error(`❌ [APP] ${new Date().toISOString()}: ${message}`, error || '');
+            }
+            
+            static success(message) {
+                console.log(`✅ [APP] ${new Date().toISOString()}: ${message}`);
+            }
+        }
+
+        // ===== FUNÇÕES DA API ROBUSTAS =====
+        async function fetchDataFromAPI(retryCount = 0) {
+            try {
+                AppLogger.info(`Buscando dados da API (tentativa ${retryCount + 1})`);
                 
-                const itemId = this.getAttribute('data-item');
-                const size = this.getAttribute('data-size');
-                
-                this.parentElement.querySelectorAll('.size-option').forEach(opt => {
-                    opt.classList.remove('active');
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${API_CONFIG.jsonbinConfig.binId}/latest`, {
+                    headers: {
+                        'X-Master-Key': API_CONFIG.jsonbinConfig.apiKey,
+                        'X-Bin-Meta': 'false'
+                    },
+                    timeout: 10000
                 });
-                this.classList.add('active');
                 
-                const item = menuData.pizzas.find(p => p.id == itemId);
-                if (item && item.prices) {
-                    const priceElement = document.getElementById(`price-${itemId}`);
-                    if (priceElement) {
-                        priceElement.textContent = formatPrice(item.prices[size]);
-                    }
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                AppLogger.success('Dados carregados com sucesso');
+                return data;
+            } catch (error) {
+                if (retryCount < 2) {
+                    AppLogger.info(`Tentativa ${retryCount + 1} falhou, tentando novamente...`);
+                    await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+                    return fetchDataFromAPI(retryCount + 1);
                 }
                 
-                const addButton = this.closest('.menu-item').querySelector('.add-to-cart');
-                addButton.setAttribute('data-size', size);
-            });
-        });
-        
-        // Event listeners para botões de adicionar ao carrinho
-        document.querySelectorAll(`#${category}-items .add-to-cart`).forEach(button => {
-            button.addEventListener('click', function() {
-                if (this.disabled) return;
-                
-                const itemId = parseInt(this.getAttribute('data-id'));
-                const size = this.getAttribute('data-size') || null;
-                
-                addToCart(itemId, size);
-                showNotification('Item adicionado ao carrinho!', 'success');
-            });
-        });
-    }
-
-    function renderAllMenus() {
-        renderMenuItems('pizzas');
-        renderMenuItems('bebidas');
-        renderMenuItems('sobremesas');
-        renderMenuItems('outros');
-    }
-
-    // ===== SISTEMA DE CARRINHO =====
-    function addToCart(itemId, size = null) {
-        let item = null;
-        let categoryFound = null;
-        
-        for (const category in menuData) {
-            item = menuData[category].find(i => i.id === itemId);
-            if (item) {
-                categoryFound = category;
-                break;
+                AppLogger.error('Erro ao carregar dados da API, usando dados locais');
+                return getDefaultData();
             }
         }
-        
-        if (!item || !item.available) {
-            showNotification('Item indisponível!', 'error');
-            return;
-        }
-        
-        const price = item.price || (item.prices && item.prices[size]);
-        if (!price) {
-            showNotification('Erro ao adicionar item!', 'error');
-            return;
-        }
-        
-        const cartItemId = size ? `${itemId}-${size}` : itemId.toString();
-        
-        const existingItem = cart.find(cartItem => cartItem.cartItemId === cartItemId);
-        
-        if (existingItem) {
-            existingItem.quantity += 1;
-        } else {
-            cart.push({
-                ...item,
-                cartItemId: cartItemId,
-                size: size,
-                price: price,
-                quantity: 1,
-                category: categoryFound
-            });
-        }
-        
-        renderCart();
-    }
 
-    function removeFromCart(cartItemId) {
-        const itemIndex = cart.findIndex(item => item.cartItemId === cartItemId);
-        if (itemIndex !== -1) {
-            cart.splice(itemIndex, 1);
-            renderCart();
-            showNotification('Item removido do carrinho!', 'error');
+        function getDefaultData() {
+            return {
+                menuData: {
+                    pizzas: [
+                        { id: 1, name: "Margherita", description: "Molho de tomate, mussarela, manjericão fresco", prices: { P: 25.90, M: 35.90, G: 45.90 }, available: true },
+                        { id: 2, name: "Calabresa", description: "Molho de tomate, mussarela, calabresa fatiada, cebola", prices: { P: 28.90, M: 38.90, G: 48.90 }, available: true }
+                    ],
+                    bebidas: [],
+                    sobremesas: [],
+                    outros: []
+                },
+                restaurantConfig: {
+                    restaurantName: "Brocados.com",
+                    whatsappNumber: "5585986063698",
+                    deliveryFee: 5.00,
+                    openingHours: "18:00-23:00",
+                    storeStatus: "open",
+                    paymentConfig: {
+                        pixKey: "israelgustavo159@gmail.com",
+                        qrExpireMinutes: 10,
+                        redirectWhatsapp: "5585986063698",
+                        paymentProvider: "simulated"
+                    },
+                    orderTimes: {
+                        deliveryMinutes: 50,
+                        pickupMinutes: 20
+                    }
+                },
+                orders: [],
+                lastUpdated: new Date().toISOString()
+            };
         }
-    }
 
-    function updateQuantity(cartItemId, newQuantity) {
-        if (newQuantity < 1) {
-            removeFromCart(cartItemId);
-            return;
+        async function createOrder(orderData) {
+            try {
+                AppLogger.info('Criando novo pedido');
+                const response = await fetch(`${API_CONFIG.baseUrl}/api/orders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const result = await response.json();
+                AppLogger.success(`Pedido ${result.orderId} criado com sucesso`);
+                return result;
+            } catch (error) {
+                AppLogger.error('Erro ao criar pedido', error);
+                return null;
+            }
         }
-        
-        const item = cart.find(item => item.cartItemId === cartItemId);
-        if (item) {
-            item.quantity = newQuantity;
-            renderCart();
-        }
-    }
 
-    function calculateTotal() {
-        let subtotal = 0;
-        cart.forEach(item => { 
-            subtotal += item.price * item.quantity; 
-        });
-        
-        const deliveryType = document.querySelector('input[name="delivery-type"]:checked')?.value || 'delivery';
-        const total = deliveryType === 'delivery' ? subtotal + restaurantConfig.deliveryFee : subtotal;
-        
-        return { subtotal, total, deliveryType };
-    }
-
-    function renderCart() {
-        const cartItemsContainer = document.querySelector('.cart-items');
-        const totalElement = document.getElementById('total-value');
-        const deliveryFeeDisplay = document.getElementById('delivery-fee-display');
-        
-        if (!cartItemsContainer) return;
-        
-        cartItemsContainer.innerHTML = '';
-        
-        if (cart.length === 0) {
-            cartItemsContainer.innerHTML = '<div class="empty-cart">Seu carrinho está vazio</div>';
-            totalElement.textContent = '0,00';
-            deliveryFeeDisplay.style.display = 'none';
-            return;
+        async function checkPaymentStatus(orderId) {
+            try {
+                const response = await fetch(`${API_CONFIG.baseUrl}/api/payment/confirm`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId })
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                return await response.json();
+            } catch (error) {
+                AppLogger.error('Erro ao verificar pagamento', error);
+                return null;
+            }
         }
-        
-        const { subtotal, total, deliveryType } = calculateTotal();
-        
-        deliveryFeeDisplay.style.display = deliveryType === 'delivery' ? 'block' : 'none';
-        
-        cart.forEach(item => {
-            const itemTotal = item.price * item.quantity;
-            let itemName = item.name;
-            if (item.size) itemName += ` (${item.size})`;
+
+        // ===== FUNÇÕES PRINCIPAIS =====
+        function formatPrice(price) {
+            return `R$ ${price.toFixed(2).replace('.', ',')}`;
+        }
+
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
             
-            const cartItemElement = document.createElement('div');
-            cartItemElement.className = 'cart-item';
-            cartItemElement.innerHTML = `
-                <div class="cart-item-info">
-                    <div class="cart-item-name">${itemName}</div>
-                    <div class="cart-item-details">${item.description}</div>
-                    <div class="cart-item-price">${formatPrice(item.price)}</div>
-                    <div class="quantity-controls">
-                        <button class="quantity-btn minus" data-id="${item.cartItemId}">-</button>
-                        <span class="quantity">${item.quantity}</span>
-                        <button class="quantity-btn plus" data-id="${item.cartItemId}">+</button>
-                    </div>
-                </div>
-                <div class="cart-item-total">${formatPrice(itemTotal)}</div>
-            `;
-            cartItemsContainer.appendChild(cartItemElement);
-        });
-        
-        totalElement.textContent = total.toFixed(2).replace('.', ',');
-        
-        // Event listeners para controles de quantidade
-        document.querySelectorAll('.quantity-btn.minus').forEach(button => {
-            button.addEventListener('click', function() {
-                const cartItemId = this.getAttribute('data-id');
-                const item = cart.find(item => item.cartItemId === cartItemId);
-                if (item) updateQuantity(cartItemId, item.quantity - 1);
-            });
-        });
-        
-        document.querySelectorAll('.quantity-btn.plus').forEach(button => {
-            button.addEventListener('click', function() {
-                const cartItemId = this.getAttribute('data-id');
-                const item = cart.find(item => item.cartItemId === cartItemId);
-                if (item) updateQuantity(cartItemId, item.quantity + 1);
-            });
-        });
-    }
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => { notification.className = 'notification'; }, 300);
+            }, 3000);
+        }
 
-    // ===== SISTEMA PIX =====
-    function showPixPayment(orderData) {
-        const modal = document.querySelector('.pix-modal');
-        const orderIdElement = document.getElementById('pix-order-id');
-        const amountElement = document.getElementById('pix-amount');
-        const countdownElement = document.getElementById('pix-countdown');
-        const qrCodeElement = document.getElementById('pix-qrcode');
-        const statusElement = document.getElementById('payment-status');
-        
-        // Atualizar informações do pedido
-        orderIdElement.textContent = `Pedido: ${orderData.orderId}`;
-        amountElement.textContent = `Valor: ${formatPrice(orderData.pixData.amount)}`;
-        qrCodeElement.src = orderData.qrCode;
-        
-        // Configurar countdown
-        const expireTime = new Date(orderData.expiresAt).getTime();
-        updateCountdown(expireTime, countdownElement);
-        
-        // Mostrar modal
-        modal.classList.add('active');
-        
-        // Monitorar pagamento
-        paymentCheckInterval = setInterval(async () => {
-            const result = await checkPaymentStatus(orderData.orderId);
-            if (result && result.success) {
-                clearInterval(paymentCheckInterval);
-                clearInterval(countdownInterval);
-                
-                statusElement.innerHTML = '✅ Pagamento confirmado! Redirecionando...';
-                statusElement.className = 'payment-status success';
-                
-                // Redirecionar para WhatsApp após confirmação
-                setTimeout(() => {
-                    const message = createWhatsAppMessage(result);
-                    const whatsappUrl = `https://wa.me/${restaurantConfig.whatsappNumber}?text=${encodeURIComponent(message)}`;
-                    window.open(whatsappUrl, '_blank');
-                    
-                    // Limpar carrinho e fechar modal
-                    cart = [];
-                    renderCart();
-                    modal.classList.remove('active');
-                    showNotification('Pedido confirmado! Redirecionado para WhatsApp.', 'success');
-                }, 2000);
+        function updateUIFromConfig() {
+            document.getElementById('restaurant-name').textContent = restaurantConfig.restaurantName;
+            document.getElementById('delivery-fee-value').textContent = restaurantConfig.deliveryFee.toFixed(2).replace('.', ',');
+            document.getElementById('delivery-fee-modal').textContent = restaurantConfig.deliveryFee.toFixed(2).replace('.', ',');
+            
+            const statusBadge = document.getElementById('status-badge');
+            const statusText = document.getElementById('status-text');
+            const checkoutBtn = document.getElementById('checkout-btn');
+            const connectionStatus = document.getElementById('connection-status');
+            
+            if (restaurantConfig.storeStatus === 'closed') {
+                statusBadge.className = 'status-badge closed';
+                statusText.textContent = 'Fechado';
+                checkoutBtn.disabled = true;
+                checkoutBtn.innerHTML = '<i class="fas fa-store-slash"></i> Loja Fechada';
+                connectionStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Loja Fechada';
+            } else {
+                statusBadge.className = 'status-badge';
+                statusText.textContent = 'Aberto';
+                checkoutBtn.disabled = false;
+                checkoutBtn.innerHTML = '<i class="fas fa-qrcode"></i> Finalizar com PIX';
+                connectionStatus.innerHTML = '<i class="fas fa-check-circle"></i> Conectado ao sistema';
             }
-        }, 3000);
+        }
 
-        // Botão de simulação (apenas em desenvolvimento)
-        const simulateBtn = document.getElementById('simulate-payment');
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            simulateBtn.style.display = 'block';
-            simulateBtn.addEventListener('click', async () => {
+        function updateLastUpdateTime() {
+            const lastUpdateElement = document.getElementById('last-update');
+            if (restaurantConfig.lastUpdated) {
+                const lastUpdate = new Date(restaurantConfig.lastUpdated);
+                lastUpdateElement.textContent = `Última atualização: ${lastUpdate.toLocaleString('pt-BR')}`;
+            }
+        }
+
+        // ===== SISTEMA DE CARDÁPIO FLEXÍVEL =====
+        function renderMenuItems(category) {
+            const container = document.getElementById(`${category}-items`);
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            if (!menuData[category] || menuData[category].length === 0) {
+                container.innerHTML = '<div class="empty-cart">Nenhum item disponível nesta categoria</div>';
+                return;
+            }
+            
+            menuData[category].forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = `menu-item ${!item.available ? 'item-unavailable' : ''}`;
+                
+                const isPizza = item.prices !== undefined;
+                
+                if (isPizza) {
+                    // 🎯 MELHORIA: Exibir apenas os tamanhos disponíveis
+                    const availableSizes = Object.keys(item.prices || {});
+                    const defaultSize = availableSizes.length > 0 ? availableSizes[0] : 'M';
+                    
+                    itemElement.innerHTML = `
+                        <div class="item-name">
+                            <span>${item.name}</span>
+                            <span class="item-price" id="price-${item.id}">${formatPrice(item.prices[defaultSize])}</span>
+                        </div>
+                        <div class="item-description">${item.description}</div>
+                        ${availableSizes.length > 1 ? `
+                        <div class="pizza-sizes">
+                            ${availableSizes.map(size => `
+                                <div class="size-option ${size === defaultSize ? 'active' : ''}" data-size="${size}" data-item="${item.id}">
+                                    <span class="size-label">${getSizeLabel(size)}</span>
+                                    <span class="size-price">${formatPrice(item.prices[size])}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ` : ''}
+                        <button class="add-to-cart" data-id="${item.id}" data-size="${defaultSize}" ${!item.available ? 'disabled' : ''}>
+                            <i class="fas fa-cart-plus"></i> ${item.available ? 'Adicionar ao Carrinho' : 'Indisponível'}
+                        </button>
+                    `;
+                } else {
+                    itemElement.innerHTML = `
+                        <div class="item-name">
+                            <span>${item.name}</span>
+                            <span class="item-price">${formatPrice(item.price)}</span>
+                        </div>
+                        <div class="item-description">${item.description}</div>
+                        <button class="add-to-cart" data-id="${item.id}" ${!item.available ? 'disabled' : ''}>
+                            <i class="fas fa-cart-plus"></i> ${item.available ? 'Adicionar ao Carrinho' : 'Indisponível'}
+                        </button>
+                    `;
+                }
+                
+                container.appendChild(itemElement);
+            });
+            
+            // Event listeners para tamanhos de pizza (apenas se houver múltiplos tamanhos)
+            document.querySelectorAll(`#${category}-items .size-option`).forEach(option => {
+                option.addEventListener('click', function() {
+                    if (this.classList.contains('active')) return;
+                    
+                    const itemId = this.getAttribute('data-item');
+                    const size = this.getAttribute('data-size');
+                    
+                    this.parentElement.querySelectorAll('.size-option').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    const item = menuData.pizzas.find(p => p.id == itemId);
+                    if (item && item.prices) {
+                        const priceElement = document.getElementById(`price-${itemId}`);
+                        if (priceElement) {
+                            priceElement.textContent = formatPrice(item.prices[size]);
+                        }
+                    }
+                    
+                    const addButton = this.closest('.menu-item').querySelector('.add-to-cart');
+                    addButton.setAttribute('data-size', size);
+                });
+            });
+            
+            // Event listeners para botões de adicionar ao carrinho
+            document.querySelectorAll(`#${category}-items .add-to-cart`).forEach(button => {
+                button.addEventListener('click', function() {
+                    if (this.disabled) return;
+                    
+                    const itemId = parseInt(this.getAttribute('data-id'));
+                    const size = this.getAttribute('data-size') || null;
+                    
+                    addToCart(itemId, size);
+                    showNotification('Item adicionado ao carrinho!', 'success');
+                });
+            });
+        }
+
+        function getSizeLabel(size) {
+            const labels = { 'P': 'Pequena', 'M': 'Média', 'G': 'Grande' };
+            return labels[size] || size;
+        }
+
+        function renderAllMenus() {
+            renderMenuItems('pizzas');
+            renderMenuItems('bebidas');
+            renderMenuItems('sobremesas');
+            renderMenuItems('outros');
+        }
+
+        // ===== SISTEMA DE CARRINHO ROBUSTO =====
+        function addToCart(itemId, size = null) {
+            let item = null;
+            let categoryFound = null;
+            
+            for (const category in menuData) {
+                item = menuData[category].find(i => i.id === itemId);
+                if (item) {
+                    categoryFound = category;
+                    break;
+                }
+            }
+            
+            if (!item || !item.available) {
+                showNotification('Item indisponível!', 'error');
+                return;
+            }
+            
+            const price = item.price || (item.prices && item.prices[size]);
+            if (!price) {
+                showNotification('Erro ao adicionar item!', 'error');
+                return;
+            }
+            
+            const cartItemId = size ? `${itemId}-${size}` : itemId.toString();
+            
+            const existingItem = cart.find(cartItem => cartItem.cartItemId === cartItemId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    ...item,
+                    cartItemId: cartItemId,
+                    size: size,
+                    price: price,
+                    quantity: 1,
+                    category: categoryFound
+                });
+            }
+            
+            renderCart();
+        }
+
+        function removeFromCart(cartItemId) {
+            const itemIndex = cart.findIndex(item => item.cartItemId === cartItemId);
+            if (itemIndex !== -1) {
+                cart.splice(itemIndex, 1);
+                renderCart();
+                showNotification('Item removido do carrinho!', 'error');
+            }
+        }
+
+        function updateQuantity(cartItemId, newQuantity) {
+            if (newQuantity < 1) {
+                removeFromCart(cartItemId);
+                return;
+            }
+            
+            const item = cart.find(item => item.cartItemId === cartItemId);
+            if (item) {
+                item.quantity = newQuantity;
+                renderCart();
+            }
+        }
+
+        function calculateTotal() {
+            let subtotal = 0;
+            cart.forEach(item => { 
+                subtotal += item.price * item.quantity; 
+            });
+            
+            const deliveryType = document.querySelector('input[name="delivery-type"]:checked')?.value || 'delivery';
+            const total = deliveryType === 'delivery' ? subtotal + restaurantConfig.deliveryFee : subtotal;
+            
+            return { subtotal, total, deliveryType };
+        }
+
+        function renderCart() {
+            const cartItemsContainer = document.querySelector('.cart-items');
+            const totalElement = document.getElementById('total-value');
+            const deliveryFeeDisplay = document.getElementById('delivery-fee-display');
+            
+            if (!cartItemsContainer) return;
+            
+            cartItemsContainer.innerHTML = '';
+            
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<div class="empty-cart">Seu carrinho está vazio</div>';
+                totalElement.textContent = '0,00';
+                deliveryFeeDisplay.style.display = 'none';
+                return;
+            }
+            
+            const { subtotal, total, deliveryType } = calculateTotal();
+            
+            deliveryFeeDisplay.style.display = deliveryType === 'delivery' ? 'block' : 'none';
+            
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                let itemName = item.name;
+                if (item.size) itemName += ` (${getSizeLabel(item.size)})`;
+                
+                const cartItemElement = document.createElement('div');
+                cartItemElement.className = 'cart-item';
+                cartItemElement.innerHTML = `
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${itemName}</div>
+                        <div class="cart-item-details">${item.description}</div>
+                        <div class="cart-item-price">${formatPrice(item.price)}</div>
+                        <div class="quantity-controls">
+                            <button class="quantity-btn minus" data-id="${item.cartItemId}">-</button>
+                            <span class="quantity">${item.quantity}</span>
+                            <button class="quantity-btn plus" data-id="${item.cartItemId}">+</button>
+                        </div>
+                    </div>
+                    <div class="cart-item-total">${formatPrice(itemTotal)}</div>
+                `;
+                cartItemsContainer.appendChild(cartItemElement);
+            });
+            
+            totalElement.textContent = total.toFixed(2).replace('.', ',');
+            
+            // Event listeners para controles de quantidade
+            document.querySelectorAll('.quantity-btn.minus').forEach(button => {
+                button.addEventListener('click', function() {
+                    const cartItemId = this.getAttribute('data-id');
+                    const item = cart.find(item => item.cartItemId === cartItemId);
+                    if (item) updateQuantity(cartItemId, item.quantity - 1);
+                });
+            });
+            
+            document.querySelectorAll('.quantity-btn.plus').forEach(button => {
+                button.addEventListener('click', function() {
+                    const cartItemId = this.getAttribute('data-id');
+                    const item = cart.find(item => item.cartItemId === cartItemId);
+                    if (item) updateQuantity(cartItemId, item.quantity + 1);
+                });
+            });
+        }
+
+        // ===== SISTEMA PIX ROBUSTO =====
+        function showPixPayment(orderData) {
+            const modal = document.querySelector('.pix-modal');
+            const orderIdElement = document.getElementById('pix-order-id');
+            const amountElement = document.getElementById('pix-amount');
+            const countdownElement = document.getElementById('pix-countdown');
+            const qrCodeElement = document.getElementById('pix-qrcode');
+            const statusElement = document.getElementById('payment-status');
+            
+            // Atualizar informações do pedido
+            orderIdElement.textContent = `Pedido: ${orderData.orderId}`;
+            amountElement.textContent = `Valor: ${formatPrice(orderData.pixData.amount)}`;
+            qrCodeElement.src = orderData.qrCode;
+            
+            // Configurar countdown
+            const expireTime = new Date(orderData.expiresAt).getTime();
+            updateCountdown(expireTime, countdownElement);
+            
+            // Mostrar modal
+            modal.classList.add('active');
+            
+            // Monitorar pagamento
+            paymentCheckInterval = setInterval(async () => {
                 const result = await checkPaymentStatus(orderData.orderId);
                 if (result && result.success) {
                     clearInterval(paymentCheckInterval);
                     clearInterval(countdownInterval);
-                    statusElement.innerHTML = '✅ Pagamento simulado confirmado!';
+                    
+                    statusElement.innerHTML = '✅ Pagamento confirmado! Redirecionando...';
                     statusElement.className = 'payment-status success';
+                    
+                    // Redirecionar para WhatsApp após confirmação
+                    setTimeout(() => {
+                        const message = createWhatsAppMessage(result);
+                        const whatsappUrl = `https://wa.me/${restaurantConfig.whatsappNumber}?text=${encodeURIComponent(message)}`;
+                        window.open(whatsappUrl, '_blank');
+                        
+                        // Limpar carrinho e fechar modal
+                        cart = [];
+                        renderCart();
+                        modal.classList.remove('active');
+                        showNotification('Pedido confirmado! Redirecionado para WhatsApp.', 'success');
+                    }, 2000);
                 }
-            });
-        }
-    }
+            }, 3000);
 
-    function updateCountdown(expireTime, element) {
-        countdownInterval = setInterval(() => {
-            const now = new Date().getTime();
-            const distance = expireTime - now;
-            
-            if (distance < 0) {
-                clearInterval(countdownInterval);
-                element.textContent = 'QR Code expirado';
-                return;
+            // Botão de simulação (apenas em desenvolvimento)
+            const simulateBtn = document.getElementById('simulate-payment');
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                simulateBtn.style.display = 'block';
+                simulateBtn.addEventListener('click', async () => {
+                    const result = await checkPaymentStatus(orderData.orderId);
+                    if (result && result.success) {
+                        clearInterval(paymentCheckInterval);
+                        clearInterval(countdownInterval);
+                        statusElement.innerHTML = '✅ Pagamento simulado confirmado!';
+                        statusElement.className = 'payment-status success';
+                    }
+                });
             }
-            
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            
-            element.textContent = `Expira em: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-        }, 1000);
-    }
+        }
 
-    function createWhatsAppMessage(paymentResult) {
-        const deliveryType = paymentResult.deliveryType;
-        const minutes = deliveryType === 'delivery' ? 
-            restaurantConfig.orderTimes.deliveryMinutes : 
-            restaurantConfig.orderTimes.pickupMinutes;
-            
-        return `✅ *PAGAMENTO CONFIRMADO!* ✅
+        function updateCountdown(expireTime, element) {
+            countdownInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const distance = expireTime - now;
+                
+                if (distance < 0) {
+                    clearInterval(countdownInterval);
+                    element.textContent = 'QR Code expirado';
+                    return;
+                }
+                
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                element.textContent = `Expira em: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function createWhatsAppMessage(paymentResult) {
+            const deliveryType = paymentResult.deliveryType;
+            const minutes = deliveryType === 'delivery' ? 
+                restaurantConfig.orderTimes.deliveryMinutes : 
+                restaurantConfig.orderTimes.pickupMinutes;
+                
+            return `✅ *PAGAMENTO CONFIRMADO!* ✅
 
 Pedido: ${currentOrder.orderId}
 Status: Pagamento aprovado
@@ -1712,199 +1788,233 @@ Status: Pagamento aprovado
 Seu pedido ${deliveryType === 'delivery' ? 'chegará em' : 'estará pronto em'} aproximadamente *${minutes} minutos*.
 
 Agradecemos pela preferência! 🍕`;
-    }
+        }
 
-    async function sendOrderViaWhatsApp(customerData, deliveryType) {
-        const { total } = calculateTotal();
-        
-        const orderData = {
-            customer: {
-                name: customerData.name,
-                phone: customerData.phone
-            },
-            items: cart.map(item => ({
-                id: item.id,
-                name: item.name,
-                size: item.size,
-                price: item.price,
-                quantity: item.quantity
-            })),
-            deliveryType,
-            address: deliveryType === 'delivery' ? customerData.address : null,
-            total: total
-        };
-
-        const orderResult = await createOrder(orderData);
-        
-        if (orderResult && orderResult.success) {
-            currentOrder = orderResult;
-            showPixPayment(orderResult);
-            return true;
-        } else {
-            showNotification('Erro ao criar pedido. Tente novamente.', 'error');
-            return false;
-        }
-    }
-
-    function validateForm(customerData, deliveryType) {
-        if (!customerData.name || !customerData.name.trim()) {
-            showNotification('Por favor, informe seu nome.', 'error');
-            return false;
-        }
-        
-        if (!customerData.phone || !customerData.phone.trim() || customerData.phone.replace(/\D/g, '').length < 10) {
-            showNotification('Por favor, informe um número de WhatsApp válido.', 'error');
-            return false;
-        }
-        
-        if (deliveryType === 'delivery' && (!customerData.address || !customerData.address.trim())) {
-            showNotification('Por favor, informe seu endereço de entrega.', 'error');
-            return false;
-        }
-        
-        if (restaurantConfig.storeStatus === 'closed') {
-            showNotification('Loja fechada no momento. Tente novamente mais tarde.', 'error');
-            return false;
-        }
-        
-        if (cart.length === 0) {
-            showNotification('Seu carrinho está vazio!', 'error');
-            return false;
-        }
-        
-        return true;
-    }
-
-    // ===== INICIALIZAÇÃO =====
-    document.addEventListener('DOMContentLoaded', async function() {
-        console.log('🚀 Iniciando cardápio digital...');
-        
-        // Carregar dados iniciais
-        await loadInitialData();
-        renderCart();
-        
-        // Atualizar dados a cada 30 segundos
-        setInterval(loadInitialData, 30000);
-        
-        // Configurar event listeners
-        setupEventListeners();
-        
-        console.log('✅ Cardápio digital iniciado com sucesso!');
-    });
-
-    async function loadInitialData() {
-        try {
-            const apiData = await fetchDataFromAPI();
+        async function sendOrderViaWhatsApp(customerData, deliveryType) {
+            const { total } = calculateTotal();
             
-            if (apiData.menuData) {
-                menuData = apiData.menuData;
-            }
-            if (apiData.restaurantConfig) {
-                restaurantConfig = apiData.restaurantConfig;
-            }
-            
-            updateUIFromConfig();
-            renderAllMenus();
-            
-        } catch (error) {
-            console.error('Erro ao carregar dados:', error);
-            showNotification('Erro ao carregar cardápio. Usando dados locais.', 'error');
-        }
-    }
-
-    function setupEventListeners() {
-        // Admin panel
-        document.getElementById('adminToggle').addEventListener('click', function() {
-            document.getElementById('adminStatus').classList.toggle('active');
-        });
-
-        // Categorias do menu
-        document.querySelectorAll('.category-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-                document.querySelectorAll('.menu-section').forEach(section => section.classList.remove('active'));
-                document.getElementById(this.getAttribute('data-category')).classList.add('active');
-            });
-        });
-        
-        // Botão de checkout
-        document.getElementById('checkout-btn').addEventListener('click', function() {
-            if (cart.length === 0) {
-                showNotification('Seu carrinho está vazio! Adicione itens antes de finalizar o pedido.', 'error');
-                return;
-            }
-            document.querySelector('.whatsapp-modal').classList.add('active');
-        });
-        
-        // Botão flutuante do WhatsApp
-        document.querySelector('.whatsapp-float').addEventListener('click', function() {
-            document.querySelector('.whatsapp-modal').classList.add('active');
-        });
-        
-        // Modal de checkout
-        document.getElementById('modal-cancel').addEventListener('click', function() {
-            document.querySelector('.whatsapp-modal').classList.remove('active');
-        });
-        
-        document.getElementById('modal-send').addEventListener('click', function() {
-            const deliveryType = document.querySelector('input[name="delivery-type"]:checked').value;
-            const customerData = {
-                name: document.getElementById('customer-name').value,
-                phone: document.getElementById('customer-phone').value,
-                address: document.getElementById('customer-address').value
+            const orderData = {
+                customer: {
+                    name: customerData.name,
+                    phone: customerData.phone
+                },
+                items: cart.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    size: item.size,
+                    price: item.price,
+                    quantity: item.quantity
+                })),
+                deliveryType,
+                address: deliveryType === 'delivery' ? customerData.address : null,
+                total: total
             };
+
+            const orderResult = await createOrder(orderData);
             
-            if (validateForm(customerData, deliveryType)) {
-                const success = sendOrderViaWhatsApp(customerData, deliveryType);
-                if (success) {
-                    document.querySelector('.whatsapp-modal').classList.remove('active');
-                    // Limpar formulário
-                    document.getElementById('customer-name').value = '';
-                    document.getElementById('customer-phone').value = '';
-                    document.getElementById('customer-address').value = '';
+            if (orderResult && orderResult.success) {
+                currentOrder = orderResult;
+                showPixPayment(orderResult);
+                return true;
+            } else {
+                showNotification('Erro ao criar pedido. Tente novamente.', 'error');
+                return false;
+            }
+        }
+
+        function validateForm(customerData, deliveryType) {
+            if (!customerData.name || !customerData.name.trim()) {
+                showNotification('Por favor, informe seu nome.', 'error');
+                return false;
+            }
+            
+            if (!customerData.phone || !customerData.phone.trim() || customerData.phone.replace(/\D/g, '').length < 10) {
+                showNotification('Por favor, informe um número de WhatsApp válido.', 'error');
+                return false;
+            }
+            
+            if (deliveryType === 'delivery' && (!customerData.address || !customerData.address.trim())) {
+                showNotification('Por favor, informe seu endereço de entrega.', 'error');
+                return false;
+            }
+            
+            if (restaurantConfig.storeStatus === 'closed') {
+                showNotification('Loja fechada no momento. Tente novamente mais tarde.', 'error');
+                return false;
+            }
+            
+            if (cart.length === 0) {
+                showNotification('Seu carrinho está vazio!', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // ===== SISTEMA DE ATUALIZAÇÃO AUTOMÁTICA =====
+        async function loadInitialData() {
+            try {
+                const apiData = await fetchDataFromAPI();
+                
+                if (apiData.menuData) {
+                    menuData = apiData.menuData;
                 }
+                if (apiData.restaurantConfig) {
+                    restaurantConfig = apiData.restaurantConfig;
+                }
+                
+                updateUIFromConfig();
+                updateLastUpdateTime();
+                renderAllMenus();
+                
+                AppLogger.success('Dados carregados e interface atualizada');
+                
+            } catch (error) {
+                AppLogger.error('Erro ao carregar dados', error);
+                showNotification('Erro ao carregar cardápio. Usando dados locais.', 'error');
+            }
+        }
+
+        function setupAutoRefresh() {
+            // Atualizar dados a cada 30 segundos
+            dataRefreshInterval = setInterval(loadInitialData, 30000);
+        }
+
+        // ===== INICIALIZAÇÃO ROBUSTA =====
+        document.addEventListener('DOMContentLoaded', async function() {
+            AppLogger.info('🚀 Iniciando cardápio digital...');
+            
+            try {
+                // Carregar dados iniciais
+                await loadInitialData();
+                renderCart();
+                
+                // Configurar atualização automática
+                setupAutoRefresh();
+                
+                // Configurar event listeners
+                setupEventListeners();
+                
+                AppLogger.success('✅ Cardápio digital iniciado com sucesso!');
+                showNotification('Sistema carregado com sucesso!', 'success');
+                
+            } catch (error) {
+                AppLogger.error('Erro crítico na inicialização', error);
+                showNotification('Erro ao iniciar o sistema. Recarregue a página.', 'error');
             }
         });
-        
-        // Opções de entrega
-        document.querySelectorAll('input[name="delivery-type"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                document.getElementById('address-group').style.display = this.value === 'delivery' ? 'block' : 'none';
-                renderCart();
+
+        function setupEventListeners() {
+            // Admin panel
+            document.getElementById('adminToggle').addEventListener('click', function() {
+                document.getElementById('adminStatus').classList.toggle('active');
             });
-        });
-        
-        // Fechar modais
-        document.querySelectorAll('.whatsapp-modal, .pix-modal').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.classList.remove('active');
-                    if (this.classList.contains('pix-modal')) {
-                        clearInterval(paymentCheckInterval);
-                        clearInterval(countdownInterval);
+
+            // Categorias do menu
+            document.querySelectorAll('.category-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('.menu-section').forEach(section => section.classList.remove('active'));
+                    document.getElementById(this.getAttribute('data-category')).classList.add('active');
+                });
+            });
+            
+            // Botão de checkout
+            document.getElementById('checkout-btn').addEventListener('click', function() {
+                if (cart.length === 0) {
+                    showNotification('Seu carrinho está vazio! Adicione itens antes de finalizar o pedido.', 'error');
+                    return;
+                }
+                document.querySelector('.whatsapp-modal').classList.add('active');
+            });
+            
+            // Botão flutuante do WhatsApp
+            document.querySelector('.whatsapp-float').addEventListener('click', function() {
+                document.querySelector('.whatsapp-modal').classList.add('active');
+            });
+            
+            // Modal de checkout
+            document.getElementById('modal-cancel').addEventListener('click', function() {
+                document.querySelector('.whatsapp-modal').classList.remove('active');
+            });
+            
+            document.getElementById('modal-send').addEventListener('click', function() {
+                const deliveryType = document.querySelector('input[name="delivery-type"]:checked').value;
+                const customerData = {
+                    name: document.getElementById('customer-name').value,
+                    phone: document.getElementById('customer-phone').value,
+                    address: document.getElementById('customer-address').value
+                };
+                
+                if (validateForm(customerData, deliveryType)) {
+                    const success = sendOrderViaWhatsApp(customerData, deliveryType);
+                    if (success) {
+                        document.querySelector('.whatsapp-modal').classList.remove('active');
+                        // Limpar formulário
+                        document.getElementById('customer-name').value = '';
+                        document.getElementById('customer-phone').value = '';
+                        document.getElementById('customer-address').value = '';
                     }
                 }
             });
-        });
-        
-        // Cancelar pedido PIX
-        document.getElementById('pix-cancel').addEventListener('click', function() {
-            document.querySelector('.pix-modal').classList.remove('active');
-            clearInterval(paymentCheckInterval);
-            clearInterval(countdownInterval);
-            showNotification('Pedido cancelado.', 'error');
-        });
-        
-        // Fechar modais com ESC
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.whatsapp-modal, .pix-modal').forEach(modal => {
-                    modal.classList.remove('active');
+            
+            // Opções de entrega
+            document.querySelectorAll('input[name="delivery-type"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    document.getElementById('address-group').style.display = this.value === 'delivery' ? 'block' : 'none';
+                    renderCart();
                 });
+            });
+            
+            // Fechar modais
+            document.querySelectorAll('.whatsapp-modal, .pix-modal').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.remove('active');
+                        if (this.classList.contains('pix-modal')) {
+                            clearInterval(paymentCheckInterval);
+                            clearInterval(countdownInterval);
+                        }
+                    }
+                });
+            });
+            
+            // Cancelar pedido PIX
+            document.getElementById('pix-cancel').addEventListener('click', function() {
+                document.querySelector('.pix-modal').classList.remove('active');
                 clearInterval(paymentCheckInterval);
                 clearInterval(countdownInterval);
-            }
+                showNotification('Pedido cancelado.', 'error');
+            });
+            
+            // Fechar modais com ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.whatsapp-modal, .pix-modal').forEach(modal => {
+                        modal.classList.remove('active');
+                    });
+                    clearInterval(paymentCheckInterval);
+                    clearInterval(countdownInterval);
+                }
+            });
+
+            // Recarregar dados manualmente com F5
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'F5') {
+                    e.preventDefault();
+                    loadInitialData();
+                    showNotification('Dados recarregados!', 'success');
+                }
+            });
+        }
+
+        // Graceful shutdown
+        window.addEventListener('beforeunload', function() {
+            if (paymentCheckInterval) clearInterval(paymentCheckInterval);
+            if (countdownInterval) clearInterval(countdownInterval);
+            if (dataRefreshInterval) clearInterval(dataRefreshInterval);
         });
-    }
-</script>
+    </script>
+</body>
+</html>
