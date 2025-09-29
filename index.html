@@ -1262,15 +1262,15 @@
     <script>
         // ===== CONFIGURAÇÃO DA API =====
        const API_CONFIG = {
-    baseUrl: window.location.hostname.includes("github.io") 
-        ? "https://4210854e822a.ngrok-free.app/"  // URL do ngrok quando no GitHub
-        : "http://localhost:3001",               // URL local durante desenvolvimento
+           baseUrl: window.location.hostname.includes("localhost") 
+           ? "http://localhost:3001"                  // quando rodar local
+           : "https://api.sosfoodly.com.br",          // quando rodar publicado
     
-    jsonbinConfig: {
-        binId: "68d845acae596e708ffdff50",
-        apiKey: "$2a$10$dk861I8m/eijJrsa4fa8mu8y1h1fZf8LgxilOkEvmxQEiUH6p11o6"
-    }
-};
+            jsonbinConfig: {
+            binId: "68d845acae596e708ffdff50",
+            apiKey: "$2a$10$dk861I8m/eijJrsa4fa8mu8y1h1fZf8LgxilOkEvmxQEiUH6p11o6"
+          }
+       };
 
         // Dados globais
         let menuData = {};
