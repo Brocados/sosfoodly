@@ -741,6 +741,12 @@
             color: #155724;
         }
         
+        .payment-status.error {
+            background: #f8d7da;
+            border-left-color: var(--primary);
+            color: #721c24;
+        }
+        
         .notification {
             position: fixed;
             top: 25px;
@@ -1392,18 +1398,18 @@
             }
         }
 
-        // ✅ CORREÇÃO: Função melhorada para verificar pagamento
+        // ✅ CORREÇÃO: Nova função para verificar status do pagamento
         async function checkPaymentStatus(orderId) {
             try {
                 AppLogger.info(`Verificando status do pagamento para pedido ${orderId}`);
                 
-                const response = await fetch(`${API_CONFIG.baseUrl}/api/payment/confirm-pix`, {
-                    method: 'POST',
+                // ✅ CORREÇÃO: Usar endpoint específico para verificar status
+                const response = await fetch(`${API_CONFIG.baseUrl}/api/orders/${orderId}/status`, {
+                    method: 'GET',
                     headers: { 
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ orderId })
+                    }
                 });
                 
                 if (!response.ok) {
@@ -1721,7 +1727,7 @@
             });
         }
 
-        // ===== SISTEMA PIX CORRIGIDO =====
+        // ✅ CORREÇÃO: Sistema PIX completamente refeito
         function showPixPayment(orderData) {
             const modal = document.querySelector('.pix-modal');
             const orderIdElement = document.getElementById('pix-order-id');
@@ -1735,59 +1741,91 @@
             amountElement.textContent = `Valor: ${formatPrice(orderData.payment.amount)}`;
             qrCodeElement.src = orderData.payment.qrCode;
             
-            // Configurar countdown
+            // ✅ CORREÇÃO: Configurar countdown correto
             const expireTime = new Date(orderData.payment.expiresAt).getTime();
             updateCountdown(expireTime, countdownElement);
             
             // Mostrar modal
             modal.classList.add('active');
             
-            // ✅ CORREÇÃO: Monitorar pagamento com tratamento de erro
+            // ✅ CORREÇÃO: Novo sistema de monitoramento de pagamento
+            startPaymentMonitoring(orderData.orderId, statusElement, modal, expireTime, countdownElement);
+        }
+
+        // ✅ CORREÇÃO: Nova função para monitorar pagamento
+        async function startPaymentMonitoring(orderId, statusElement, modal, expireTime, countdownElement) {
+            let attempts = 0;
+            const maxAttempts = 60; // 5 minutos (5s * 60 = 300s)
+            
             paymentCheckInterval = setInterval(async () => {
                 try {
-                    const result = await checkPaymentStatus(orderData.orderId);
-                    if (result && result.success) {
-                        clearInterval(paymentCheckInterval);
-                        clearInterval(countdownInterval);
-                        
-                        statusElement.innerHTML = '✅ Pagamento confirmado! Redirecionando...';
-                        statusElement.className = 'payment-status success';
-                        
-                        // Redirecionar para WhatsApp após confirmação
-                        setTimeout(() => {
-                            const whatsappUrl = `https://wa.me/${result.whatsappNumber || restaurantConfig.whatsappNumber}?text=${encodeURIComponent(result.whatsappMessage)}`;
-                            window.open(whatsappUrl, '_blank');
-                            
-                            // Limpar carrinho e fechar modal
-                            cart = [];
-                            renderCart();
-                            modal.classList.remove('active');
-                            showNotification('Pedido confirmado! Redirecionado para WhatsApp.', 'success');
-                        }, 2000);
+                    attempts++;
+                    const result = await checkPaymentStatus(orderId);
+                    
+                    if (!result) {
+                        AppLogger.error('Erro ao verificar status do pagamento');
+                        return;
                     }
-                } catch (error) {
-                    AppLogger.error('Erro ao verificar pagamento', error);
-                }
-            }, 3000);
-
-            // Botão de simulação (apenas em desenvolvimento)
-            const simulateBtn = document.getElementById('simulate-payment');
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                simulateBtn.style.display = 'block';
-                simulateBtn.addEventListener('click', async () => {
-                    try {
-                        const result = await checkPaymentStatus(orderData.orderId);
-                        if (result && result.success) {
+                    
+                    // ✅ CORREÇÃO: Tratamento correto dos status
+                    switch (result.status) {
+                        case 'approved':
+                            // Pagamento aprovado - redirecionar para WhatsApp
                             clearInterval(paymentCheckInterval);
                             clearInterval(countdownInterval);
-                            statusElement.innerHTML = '✅ Pagamento simulado confirmado!';
+                            
+                            statusElement.innerHTML = '✅ Pagamento confirmado! Redirecionando...';
                             statusElement.className = 'payment-status success';
-                        }
-                    } catch (error) {
-                        AppLogger.error('Erro na simulação', error);
+                            
+                            // Redirecionar para WhatsApp após confirmação
+                            setTimeout(() => {
+                                const whatsappUrl = `https://wa.me/${result.whatsappNumber || restaurantConfig.whatsappNumber}?text=${encodeURIComponent(result.whatsappMessage)}`;
+                                window.open(whatsappUrl, '_blank');
+                                
+                                // Limpar carrinho e fechar modal
+                                cart = [];
+                                renderCart();
+                                modal.classList.remove('active');
+                                showNotification('Pedido confirmado! Redirecionado para WhatsApp.', 'success');
+                            }, 2000);
+                            break;
+                            
+                        case 'pending':
+                            // Pagamento pendente - continuar aguardando
+                            statusElement.innerHTML = '<div class="loading"></div> Aguardando pagamento...';
+                            statusElement.className = 'payment-status';
+                            break;
+                            
+                        case 'rejected':
+                            // Pagamento rejeitado - mostrar erro
+                            clearInterval(paymentCheckInterval);
+                            statusElement.innerHTML = '❌ Pagamento recusado. Tente novamente.';
+                            statusElement.className = 'payment-status error';
+                            break;
+                            
+                        default:
+                            // Status desconhecido
+                            statusElement.innerHTML = '<div class="loading"></div> Verificando pagamento...';
+                            statusElement.className = 'payment-status';
                     }
-                });
-            }
+                    
+                    // Verificar se excedeu o número máximo de tentativas
+                    if (attempts >= maxAttempts) {
+                        clearInterval(paymentCheckInterval);
+                        statusElement.innerHTML = '⏰ Tempo esgotado. Pedido cancelado.';
+                        statusElement.className = 'payment-status error';
+                    }
+                    
+                } catch (error) {
+                    AppLogger.error('Erro ao verificar pagamento', error);
+                    
+                    if (attempts >= maxAttempts) {
+                        clearInterval(paymentCheckInterval);
+                        statusElement.innerHTML = '❌ Erro ao verificar pagamento. Tente novamente.';
+                        statusElement.className = 'payment-status error';
+                    }
+                }
+            }, 5000); // Verificar a cada 5 segundos
         }
 
         function updateCountdown(expireTime, element) {
