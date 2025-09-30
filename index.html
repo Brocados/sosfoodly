@@ -16,15 +16,16 @@
         :root {
             --primary: #e74c3c;
             --primary-dark: #c0392b;
-            --secondary: #2c3e50;
-            --background: #f8f9fa;
-            --button-text: #ffffff;
+            --secondary: #f39c12;
             --light: #f5f5f5;
-            --dark: #333333;
-            --gray: #666666;
+            --dark: #333;
+            --gray: #666;
             --success: #27ae60;
             --warning: #f39c12;
-            --admin: #34495e;
+            --admin: #2c3e50;
+            --pix: #32BCAD;
+            --background: #f5f5f5;
+            --button-text: #FFFFFF;
         }
         
         body {
@@ -32,6 +33,7 @@
             color: var(--dark);
             line-height: 1.6;
             min-height: 100vh;
+            transition: all 0.3s ease;
         }
         
         .container {
@@ -43,7 +45,7 @@
         header {
             text-align: center;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: var(--button-text);
+            color: white;
             padding: 25px 0;
             border-radius: 20px;
             margin-bottom: 25px;
@@ -82,7 +84,7 @@
         
         .logo i {
             margin-right: 15px;
-            color: var(--button-text);
+            color: var(--secondary);
             animation: bounce 2s infinite;
         }
         
@@ -109,6 +111,7 @@
             border-radius: 20px;
             font-size: 0.9rem;
             font-weight: bold;
+            z-index: 2;
         }
         
         .status-badge.closed {
@@ -226,8 +229,8 @@
         
         .menu-items {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
         }
         
         .menu-item {
@@ -238,7 +241,6 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
         }
         
         .menu-item::before {
@@ -265,22 +267,22 @@
         .item-image {
             width: 100%;
             height: 200px;
-            border-radius: 12px;
             object-fit: cover;
+            border-radius: 10px;
             margin-bottom: 15px;
-            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+            background: #f8f9fa;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--gray);
-            font-size: 3rem;
+            font-size: 0.9rem;
         }
         
         .item-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 12px;
+            border-radius: 10px;
         }
         
         .item-name {
@@ -307,6 +309,7 @@
             border-radius: 10px;
             overflow: hidden;
             border: 1px solid #e0e0e0;
+            flex-wrap: wrap;
         }
         
         .size-option {
@@ -317,6 +320,7 @@
             transition: all 0.3s ease;
             font-weight: bold;
             position: relative;
+            min-width: 80px;
         }
         
         .size-option:not(:last-child) {
@@ -349,7 +353,7 @@
         
         .add-to-cart {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: var(--button-text);
+            color: white;
             border: none;
             padding: 12px 20px;
             border-radius: 10px;
@@ -454,7 +458,7 @@
         
         .checkout-btn {
             background: linear-gradient(135deg, var(--success), #219653);
-            color: var(--button-text);
+            color: white;
             border: none;
             padding: 18px 25px;
             border-radius: 15px;
@@ -585,6 +589,10 @@
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
         }
         
+        .pix-modal .modal-content::before {
+            background: linear-gradient(135deg, var(--pix), #229c8d);
+        }
+        
         .modal-title {
             color: var(--primary);
             margin-bottom: 25px;
@@ -593,14 +601,13 @@
             font-size: 1.5rem;
         }
         
-        .modal-title i {
-            margin-right: 12px;
-            color: #25D366;
-            font-size: 1.8rem;
+        .pix-modal .modal-title {
+            color: var(--pix);
         }
         
-        .pix-title i {
-            color: #32BCAD;
+        .modal-title i {
+            margin-right: 12px;
+            font-size: 1.8rem;
         }
         
         .form-group {
@@ -615,7 +622,7 @@
             font-size: 1rem;
         }
         
-        .form-group input, .form-group textarea {
+        .form-group input {
             width: 100%;
             padding: 15px;
             border: 2px solid #e0e0e0;
@@ -623,10 +630,9 @@
             font-size: 1rem;
             transition: all 0.3s ease;
             background: #f8f9fa;
-            resize: vertical;
         }
         
-        .form-group input:focus, .form-group textarea:focus {
+        .form-group input:focus {
             border-color: var(--primary);
             background: white;
             box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
@@ -722,90 +728,71 @@
             box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
         }
         
-        .modal-btn.pix {
-            background: linear-gradient(135deg, #32BCAD, #2a9d8f);
-            color: white;
-            box-shadow: 0 5px 15px rgba(50, 188, 173, 0.3);
-        }
-        
-        .modal-btn.send:hover, .modal-btn.pix:hover {
+        .modal-btn.send:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);
         }
         
-        .pix-container {
+        .pix-content {
             text-align: center;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 15px;
-            margin-bottom: 20px;
         }
         
-        .qrcode-container {
-            margin: 20px 0;
-            padding: 20px;
+        .qrcode {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 10px;
             background: white;
-            border-radius: 12px;
-            border: 2px solid #e0e0e0;
         }
         
-        .qrcode-image {
-            max-width: 250px;
-            margin: 0 auto 15px;
-        }
-        
-        .qrcode-image img {
+        .qrcode img {
             width: 100%;
-            height: auto;
-            border-radius: 8px;
-        }
-        
-        .pix-code {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            border: 1px dashed #ccc;
-            word-break: break-all;
-            font-family: monospace;
-            font-size: 0.9rem;
+            height: 100%;
+            object-fit: contain;
         }
         
         .copy-pix-btn {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background: linear-gradient(135deg, var(--pix), #229c8d);
             color: white;
             border: none;
             padding: 12px 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: bold;
             margin: 10px 0;
+            width: 100%;
             transition: all 0.3s ease;
         }
         
         .copy-pix-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+            box-shadow: 0 5px 15px rgba(50, 188, 173, 0.4);
         }
         
         .payment-status {
-            text-align: center;
-            margin: 20px 0;
             padding: 15px;
             border-radius: 10px;
-            font-weight: bold;
-        }
-        
-        .payment-status.pending {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
+            margin: 20px 0;
+            background: #f8f9fa;
+            border-left: 4px solid var(--warning);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
         
         .payment-status.success {
-            background: #d1edff;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
+            background: #d4edda;
+            border-left-color: var(--success);
+            color: #155724;
+        }
+        
+        .payment-status.error {
+            background: #f8d7da;
+            border-left-color: var(--primary);
+            color: #721c24;
         }
         
         .notification {
@@ -858,7 +845,7 @@
         }
         
         .admin-btn:hover {
-            background: #2c3e50;
+            background: #34495e;
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.4);
         }
@@ -914,7 +901,6 @@
             border-top: 3px solid var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-left: 10px;
         }
         
         @keyframes spin {
@@ -1024,8 +1010,9 @@
                 top: 60px;
             }
             
-            .qrcode-image {
-                max-width: 200px;
+            .qrcode {
+                width: 150px;
+                height: 150px;
             }
         }
 
@@ -1102,7 +1089,45 @@
             transform: none;
             box-shadow: none;
         }
-     </style>
+        
+        .order-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid var(--pix);
+        }
+        
+        .order-id {
+            font-weight: bold;
+            color: var(--pix);
+            font-size: 1.1rem;
+        }
+        
+        .countdown {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+        
+        .system-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        
+        .last-update {
+            font-size: 0.8rem;
+            color: var(--gray);
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
