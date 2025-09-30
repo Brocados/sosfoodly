@@ -16,16 +16,15 @@
         :root {
             --primary: #e74c3c;
             --primary-dark: #c0392b;
-            --secondary: #f39c12;
+            --secondary: #2c3e50;
+            --background: #f8f9fa;
+            --button-text: #ffffff;
             --light: #f5f5f5;
-            --dark: #333;
-            --gray: #666;
+            --dark: #333333;
+            --gray: #666666;
             --success: #27ae60;
             --warning: #f39c12;
-            --admin: #2c3e50;
-            --pix: #32BCAD;
-            --background: #f5f5f5;
-            --button-text: #FFFFFF;
+            --admin: #34495e;
         }
         
         body {
@@ -33,7 +32,6 @@
             color: var(--dark);
             line-height: 1.6;
             min-height: 100vh;
-            transition: all 0.3s ease;
         }
         
         .container {
@@ -45,7 +43,7 @@
         header {
             text-align: center;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
+            color: var(--button-text);
             padding: 25px 0;
             border-radius: 20px;
             margin-bottom: 25px;
@@ -84,7 +82,7 @@
         
         .logo i {
             margin-right: 15px;
-            color: var(--secondary);
+            color: var(--button-text);
             animation: bounce 2s infinite;
         }
         
@@ -111,7 +109,6 @@
             border-radius: 20px;
             font-size: 0.9rem;
             font-weight: bold;
-            z-index: 2;
         }
         
         .status-badge.closed {
@@ -229,8 +226,8 @@
         
         .menu-items {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
         }
         
         .menu-item {
@@ -241,6 +238,7 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
         }
         
         .menu-item::before {
@@ -267,22 +265,22 @@
         .item-image {
             width: 100%;
             height: 200px;
+            border-radius: 12px;
             object-fit: cover;
-            border-radius: 10px;
             margin-bottom: 15px;
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--gray);
-            font-size: 0.9rem;
+            font-size: 3rem;
         }
         
         .item-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 10px;
+            border-radius: 12px;
         }
         
         .item-name {
@@ -309,7 +307,6 @@
             border-radius: 10px;
             overflow: hidden;
             border: 1px solid #e0e0e0;
-            flex-wrap: wrap;
         }
         
         .size-option {
@@ -320,7 +317,6 @@
             transition: all 0.3s ease;
             font-weight: bold;
             position: relative;
-            min-width: 80px;
         }
         
         .size-option:not(:last-child) {
@@ -353,7 +349,7 @@
         
         .add-to-cart {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
+            color: var(--button-text);
             border: none;
             padding: 12px 20px;
             border-radius: 10px;
@@ -458,7 +454,7 @@
         
         .checkout-btn {
             background: linear-gradient(135deg, var(--success), #219653);
-            color: white;
+            color: var(--button-text);
             border: none;
             padding: 18px 25px;
             border-radius: 15px;
@@ -589,10 +585,6 @@
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
         }
         
-        .pix-modal .modal-content::before {
-            background: linear-gradient(135deg, var(--pix), #229c8d);
-        }
-        
         .modal-title {
             color: var(--primary);
             margin-bottom: 25px;
@@ -601,13 +593,14 @@
             font-size: 1.5rem;
         }
         
-        .pix-modal .modal-title {
-            color: var(--pix);
-        }
-        
         .modal-title i {
             margin-right: 12px;
+            color: #25D366;
             font-size: 1.8rem;
+        }
+        
+        .pix-title i {
+            color: #32BCAD;
         }
         
         .form-group {
@@ -622,7 +615,7 @@
             font-size: 1rem;
         }
         
-        .form-group input {
+        .form-group input, .form-group textarea {
             width: 100%;
             padding: 15px;
             border: 2px solid #e0e0e0;
@@ -630,9 +623,10 @@
             font-size: 1rem;
             transition: all 0.3s ease;
             background: #f8f9fa;
+            resize: vertical;
         }
         
-        .form-group input:focus {
+        .form-group input:focus, .form-group textarea:focus {
             border-color: var(--primary);
             background: white;
             box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
@@ -728,71 +722,90 @@
             box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
         }
         
-        .modal-btn.send:hover {
+        .modal-btn.pix {
+            background: linear-gradient(135deg, #32BCAD, #2a9d8f);
+            color: white;
+            box-shadow: 0 5px 15px rgba(50, 188, 173, 0.3);
+        }
+        
+        .modal-btn.send:hover, .modal-btn.pix:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);
         }
         
-        .pix-content {
+        .pix-container {
             text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            margin-bottom: 20px;
         }
         
-        .qrcode {
-            width: 200px;
-            height: 200px;
-            margin: 20px auto;
-            border: 2px solid #eee;
-            border-radius: 10px;
-            padding: 10px;
+        .qrcode-container {
+            margin: 20px 0;
+            padding: 20px;
             background: white;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
         }
         
-        .qrcode img {
+        .qrcode-image {
+            max-width: 250px;
+            margin: 0 auto 15px;
+        }
+        
+        .qrcode-image img {
             width: 100%;
-            height: 100%;
-            object-fit: contain;
+            height: auto;
+            border-radius: 8px;
+        }
+        
+        .pix-code {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px dashed #ccc;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.9rem;
         }
         
         .copy-pix-btn {
-            background: linear-gradient(135deg, var(--pix), #229c8d);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             border: none;
             padding: 12px 20px;
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
             margin: 10px 0;
-            width: 100%;
             transition: all 0.3s ease;
         }
         
         .copy-pix-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(50, 188, 173, 0.4);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
         }
         
         .payment-status {
+            text-align: center;
+            margin: 20px 0;
             padding: 15px;
             border-radius: 10px;
-            margin: 20px 0;
-            background: #f8f9fa;
-            border-left: 4px solid var(--warning);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            font-weight: bold;
+        }
+        
+        .payment-status.pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
         }
         
         .payment-status.success {
-            background: #d4edda;
-            border-left-color: var(--success);
-            color: #155724;
-        }
-        
-        .payment-status.error {
-            background: #f8d7da;
-            border-left-color: var(--primary);
-            color: #721c24;
+            background: #d1edff;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
         }
         
         .notification {
@@ -845,7 +858,7 @@
         }
         
         .admin-btn:hover {
-            background: #34495e;
+            background: #2c3e50;
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.4);
         }
@@ -901,6 +914,7 @@
             border-top: 3px solid var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin-left: 10px;
         }
         
         @keyframes spin {
@@ -1010,9 +1024,8 @@
                 top: 60px;
             }
             
-            .qrcode {
-                width: 150px;
-                height: 150px;
+            .qrcode-image {
+                max-width: 200px;
             }
         }
 
@@ -1089,45 +1102,7 @@
             transform: none;
             box-shadow: none;
         }
-        
-        .order-info {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            border-left: 4px solid var(--pix);
-        }
-        
-        .order-id {
-            font-weight: bold;
-            color: var(--pix);
-            font-size: 1.1rem;
-        }
-        
-        .countdown {
-            font-size: 0.9rem;
-            color: var(--gray);
-            margin-top: 5px;
-        }
-        
-        .system-status {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 10px;
-            background: #f8f9fa;
-        }
-        
-        .last-update {
-            font-size: 0.8rem;
-            color: var(--gray);
-            text-align: center;
-            margin-top: 10px;
-        }
-    </style>
+     </style>
 </head>
 <body>
     <div class="container">
