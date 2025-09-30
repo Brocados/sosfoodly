@@ -1102,17 +1102,24 @@
             transform: none;
             box-shadow: none;
         }
-    </style>
+     </style>
 </head>
 <body>
     <div class="container">
         <header>
+            <div class="status-badge" id="status-badge">
+                <i class="fas fa-store"></i> <span id="status-text">Aberto</span>
+            </div>
             <div class="logo">
                 <i class="fas fa-pizza-slice"></i>
                 <span id="restaurant-name">Brocados.com</span>
             </div>
             <p class="tagline">Sabor que conquista, preço que surpreende!</p>
-            <div class="status-badge" id="store-status">🟢 ABERTO</div>
+            <div class="system-status">
+                <i class="fas fa-sync-alt fa-spin"></i>
+                <span id="connection-status">Conectado ao sistema</span>
+            </div>
+            <div class="last-update" id="last-update"></div>
         </header>
         
         <div class="menu-categories">
@@ -1176,7 +1183,7 @@
             <div class="delivery-fee" id="delivery-fee-display" style="display: none;">Taxa de entrega: R$ <span id="delivery-fee-value">5,00</span></div>
             <div class="cart-total">Total: R$ <span id="total-value">0,00</span></div>
             <button class="checkout-btn" id="checkout-btn">
-                <i class="fas fa-qrcode"></i> Pagar com PIX
+                <i class="fas fa-qrcode"></i> Finalizar com PIX
             </button>
         </div>
     </div>
@@ -1185,7 +1192,6 @@
         <i class="fab fa-whatsapp"></i>
     </div>
 
-    <!-- Modal WhatsApp -->
     <div class="whatsapp-modal">
         <div class="modal-content">
             <h2 class="modal-title">
@@ -1230,55 +1236,43 @@
                 <label for="customer-address">Endereço de Entrega:</label>
                 <input type="text" id="customer-address" placeholder="Rua, número, bairro, complemento...">
             </div>
-
-            <div class="form-group">
-                <label for="customer-notes">Observações:</label>
-                <textarea id="customer-notes" placeholder="Alguma observação sobre o pedido? (opcional)" rows="3"></textarea>
-            </div>
-            
             <div class="modal-buttons">
                 <button class="modal-btn cancel" id="modal-cancel">Cancelar</button>
-                <button class="modal-btn pix" id="modal-pix">Pagar com PIX</button>
+                <button class="modal-btn send" id="modal-send">Pagar com PIX</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal PIX -->
     <div class="pix-modal">
         <div class="modal-content">
-            <h2 class="modal-title pix-title">
+            <h2 class="modal-title">
                 <i class="fas fa-qrcode"></i> Pagamento PIX
             </h2>
-            
-            <div class="pix-container">
-                <div class="payment-status pending" id="payment-status">
-                    <i class="fas fa-clock"></i> Aguardando pagamento...
-                </div>
-                
-                <div class="qrcode-container">
-                    <div class="qrcode-image" id="qrcode-image">
-                        <div class="loading">Gerando QR Code...</div>
-                    </div>
-                    <div class="pix-code" id="pix-code-text">
-                        Carregando código PIX...
-                    </div>
-                    <button class="copy-pix-btn" id="copy-pix-btn">
-                        <i class="fas fa-copy"></i> Copiar Código PIX
-                    </button>
-                </div>
-                
+            <div class="pix-content">
                 <div class="order-info">
-                    <p><strong>Pedido:</strong> <span id="pix-order-id">-</span></p>
-                    <p><strong>Valor:</strong> R$ <span id="pix-amount">0,00</span></p>
-                    <p><strong>Vencimento:</strong> <span id="pix-expires">-</span></p>
+                    <div class="order-id" id="pix-order-id">Pedido: BRO12345</div>
+                    <div id="pix-amount">Valor: R$ 0,00</div>
+                    <div class="countdown" id="pix-countdown">Expira em: 10:00</div>
                 </div>
-            </div>
-            
-            <div class="modal-buttons">
-                <button class="modal-btn cancel" id="pix-cancel">Cancelar Pedido</button>
-                <button class="modal-btn send" id="pix-confirm" style="display: none;">
-                    <i class="fab fa-whatsapp"></i> Pagamento Confirmado
+                
+                <div class="qrcode" id="pix-qrcode">
+                    <img src="" alt="QR Code PIX">
+                </div>
+                <p>Escaneie o QR Code com seu app bancário</p>
+                
+                <button class="copy-pix-btn" id="copy-pix-btn">
+                    <i class="fas fa-copy"></i> Copiar Código PIX
                 </button>
+                
+                <div class="payment-status" id="payment-status">
+                    <div class="loading"></div>
+                    Aguardando pagamento...
+                </div>
+                
+                <div class="modal-buttons">
+                    <button class="modal-btn cancel" id="pix-cancel">Cancelar Pedido</button>
+                    <button class="modal-btn send" id="simulate-payment" style="display: none;">Simular Pagamento (Teste)</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1303,233 +1297,185 @@
     <script>
         // ===== CONFIGURAÇÃO DA API =====
         const API_CONFIG = {
-            binId: '68d845acae596e708ffdff50',
-            apiKey: '$2a$10$dk861I8m/eijJrsa4fa8mu8y1h1fZf8LgxilOkEvmxQEiUH6p11o6',
-            baseUrl: 'https://api.jsonbin.io/v3/b',
-            serverUrl: window.location.hostname === 'localhost' 
-                ? 'http://localhost:3001/api' 
-                : 'https://api.sosfoodly.com.br'
-        };
-
-        // Dados iniciais do cardápio (fallback)
-        let menuData = {
-            pizzas: [
-                { id: 1, name: "Margherita", description: "Molho de tomate, mussarela, manjericão fresco", prices: { P: 25.90, M: 35.90, G: 45.90 }, available: true },
-                { id: 2, name: "Calabresa", description: "Molho de tomate, mussarela, calabresa fatiada, cebola", prices: { P: 28.90, M: 38.90, G: 48.90 }, available: true },
-                { id: 3, name: "Quatro Queijos", description: "Molho de tomate, mussarela, provolone, parmesão, gorgonzola", prices: { P: 32.90, M: 42.90, G: 52.90 }, available: true },
-                { id: 4, name: "Portuguesa", description: "Molho de tomate, mussarela, presunto, ovos, cebola, azeitonas", prices: { P: 31.90, M: 41.90, G: 51.90 }, available: true },
-                { id: 5, name: "Frango com Catupiry", description: "Molho de tomate, mussarela, frango desfiado, catupiry", prices: { P: 34.90, M: 44.90, G: 54.90 }, available: true },
-                { id: 6, name: "Pepperoni", description: "Molho de tomate, mussarela, pepperoni fatiado", prices: { P: 35.90, M: 45.90, G: 55.90 }, available: true }
-            ],
-            bebidas: [
-                { id: 7, name: "Coca-Cola 2L", description: "Refrigerante de cola", price: 12.00, available: true },
-                { id: 8, name: "Guaraná Antarctica 2L", description: "Refrigerante de guaraná", price: 10.00, available: true },
-                { id: 9, name: "Suco de Laranja 1L", description: "Suco natural de laranja", price: 15.00, available: true },
-                { id: 10, name: "Água Mineral 500ml", description: "Água mineral sem gás", price: 4.00, available: true },
-                { id: 11, name: "Heineken 600ml", description: "Cerveja Heineken long neck", price: 12.00, available: true },
-                { id: 12, name: "Chopp Artesanal", description: "Chopp artesanal da casa", price: 18.00, available: true }
-            ],
-            sobremesas: [
-                { id: 13, name: "Pudim de Leite", description: "Pudim de leite condensado com calda de caramelo", price: 12.00, available: true },
-                { id: 14, name: "Brownie com Sorvete", description: "Brownie de chocolate com sorvete de creme", price: 18.00, available: true },
-                { id: 15, name: "Mousse de Chocolate", description: "Mousse cremosa de chocolate meio amargo", price: 10.00, available: true },
-                { id: 16, name: "Torta de Limão", description: "Torta de limão com merengue", price: 15.00, available: true },
-                { id: 17, name: "Sorvete Napolitano", description: "Sorvete de chocolate, baunilha e morango", price: 14.00, available: true },
-                { id: 18, name: "Cheesecake de Morango", description: "Cheesecake com calda de morango", price: 20.00, available: true }
-            ],
-            outros: [
-                { id: 19, name: "Hambúrguer Artesanal", description: "Pão brioche, hambúrguer 180g, queijo, alface, tomate", price: 24.90, available: true },
-                { id: 20, name: "Batata Frita", description: "Porção de batata frita crocante com cheddar e bacon", price: 18.90, available: true },
-                { id: 21, name: "Coxinha de Frango", description: "Coxinha de frango com catupiry (unidade)", price: 6.50, available: true },
-                { id: 22, name: "Esfiha de Carne", description: "Esfiha aberta de carne (unidade)", price: 5.50, available: true },
-                { id: 23, name: "Sanduíche Natural", description: "Pão integral, frango, alface, tomate, maionese", price: 15.90, available: true },
-                { id: 24, name: "Pastel de Queijo", description: "Pastel frito com queijo mussarela (unidade)", price: 7.00, available: true }
-            ]
-        };
-
-        // Configurações do restaurante (fallback)
-        let restaurantConfig = {
-            whatsappNumber: "5585986063698",
-            deliveryFee: 5.00,
-            restaurantName: "Brocados.com",
-            openingHours: "18:00-23:00",
-            storeStatus: "open",
-            theme: {
-                primary: "#e74c3c",
-                secondary: "#2c3e50",
-                background: "#f8f9fa",
-                buttonText: "#ffffff"
+            baseUrl: window.location.hostname.includes("localhost") 
+                ? "http://localhost:3001"                  
+                : "https://api.sosfoodly.com.br",
+            jsonbinConfig: {
+                binId: "68d845acae596e708ffdff50",
+                apiKey: "$2a$10$dk861I8m/eijJrsa4fa8mu8y1h1fZf8LgxilOkEvmxQEiUH6p11o6"
             }
         };
 
-        // Carrinho de compras
+        // Dados globais
+        let menuData = {};
+        let restaurantConfig = {};
         let cart = [];
         let currentOrder = null;
         let paymentCheckInterval = null;
+        let countdownInterval = null;
+        let dataRefreshInterval = null;
 
-        // ===== FUNÇÕES DA API =====
-        async function fetchDataFromJSONBin() {
-            try {
-                console.log('📡 Buscando dados do JSONBin...');
-                const response = await fetch(`${API_CONFIG.baseUrl}/${API_CONFIG.binId}/latest`, {
-                    headers: {
-                        'X-Master-Key': API_CONFIG.apiKey,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) throw new Error('Erro ao buscar dados do JSONBin');
-                
-                const data = await response.json();
-                console.log('✅ Dados recebidos do JSONBin:', data);
-                
-                if (data.record) {
-                    return data.record;
-                } else {
-                    throw new Error('Estrutura de dados inválida do JSONBin');
-                }
-            } catch (error) {
-                console.warn('❌ Erro ao buscar dados do JSONBin:', error);
-                throw error;
+        // ===== SISTEMA DE LOGS =====
+        class AppLogger {
+            static info(message) {
+                console.log(`📱 [APP] ${new Date().toISOString()}: ${message}`);
+            }
+            
+            static error(message, error = null) {
+                console.error(`❌ [APP] ${new Date().toISOString()}: ${message}`, error || '');
+            }
+            
+            static success(message) {
+                console.log(`✅ [APP] ${new Date().toISOString()}: ${message}`);
             }
         }
 
-        async function fetchDataFromServer() {
+        // ===== FUNÇÕES DA API ROBUSTAS =====
+        async function fetchDataFromAPI(retryCount = 0) {
             try {
-                console.log('📡 Buscando dados do servidor...');
-                const response = await fetch(`${API_CONFIG.serverUrl}/public/bin/latest`);
+                AppLogger.info(`Buscando dados da API (tentativa ${retryCount + 1})`);
                 
-                if (!response.ok) throw new Error('Erro ao buscar dados do servidor');
-                
-                const data = await response.json();
-                console.log('✅ Dados recebidos do servidor:', data);
-                return data;
-            } catch (error) {
-                console.warn('❌ Erro ao buscar dados do servidor:', error);
-                throw error;
-            }
-        }
-
-        async function fetchDataFromAPI() {
-            try {
-                // Primeiro tenta buscar do servidor
-                const serverData = await fetchDataFromServer();
-                return serverData;
-            } catch (serverError) {
-                console.warn('❌ Servidor indisponível, tentando JSONBin...');
-                
-                try {
-                    // Fallback para JSONBin direto
-                    const jsonBinData = await fetchDataFromJSONBin();
-                    return jsonBinData;
-                } catch (jsonBinError) {
-                    console.warn('❌ JSONBin também indisponível, usando dados locais...');
-                    return { 
-                        menuData: menuData, 
-                        restaurantConfig: restaurantConfig, 
-                        lastUpdated: new Date().toISOString() 
-                    };
-                }
-            }
-        }
-
-        async function createPixPayment(orderData) {
-            try {
-                const response = await fetch(`${API_CONFIG.serverUrl}/orders/pix`, {
-                    method: 'POST',
+                const response = await fetch(`${API_CONFIG.baseUrl}/api/public/bin/latest`, {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
+                    },
+                    timeout: 10000
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                AppLogger.success('Dados carregados com sucesso');
+                return data;
+            } catch (error) {
+                if (retryCount < 2) {
+                    AppLogger.info(`Tentativa ${retryCount + 1} falhou, tentando novamente...`);
+                    await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+                    return fetchDataFromAPI(retryCount + 1);
+                }
+                
+                AppLogger.error('Erro ao carregar dados da API, usando dados locais');
+                return getDefaultData();
+            }
+        }
+
+        function getDefaultData() {
+            return {
+                menuData: {
+                    pizzas: [
+                        { 
+                            id: 1, 
+                            name: "Margherita", 
+                            description: "Molho de tomate, mussarela, manjericão fresco", 
+                            prices: { P: 25.90, M: 35.90, G: 45.90 }, 
+                            available: true,
+                            image: null
+                        },
+                        { 
+                            id: 2, 
+                            name: "Calabresa", 
+                            description: "Molho de tomate, mussarela, calabresa fatiada, cebola", 
+                            prices: { P: 28.90, M: 38.90, G: 48.90 }, 
+                            available: true,
+                            image: null
+                        }
+                    ],
+                    bebidas: [],
+                    sobremesas: [],
+                    outros: []
+                },
+                restaurantConfig: {
+                    restaurantName: "Brocados.com",
+                    whatsappNumber: "5585986063698",
+                    deliveryFee: 5.00,
+                    openingHours: "18:00-23:00",
+                    storeStatus: "open",
+                    paymentConfig: {
+                        pixKey: "israelgustavo159@gmail.com",
+                        qrExpireMinutes: 10,
+                        redirectWhatsapp: "5585986063698",
+                        paymentProvider: "pix"
+                    },
+                    orderTimes: {
+                        deliveryMinutes: 50,
+                        pickupMinutes: 20
+                    }
+                },
+                theme: {
+                    primary: "#e74c3c",
+                    secondary: "#f39c12",
+                    background: "#f5f5f5",
+                    buttonText: "#FFFFFF"
+                },
+                orders: [],
+                lastUpdated: new Date().toISOString()
+            };
+        }
+
+        // ✅ CORREÇÃO: Função corrigida para criar pedidos PIX
+        async function createOrder(orderData) {
+            try {
+                AppLogger.info('Criando novo pedido PIX');
+                
+                // ✅ CORREÇÃO: Usar endpoint específico para PIX
+                const response = await fetch(`${API_CONFIG.baseUrl}/api/orders/pix`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify(orderData)
                 });
                 
-                const data = await response.json();
-                
-                if (data.success) {
-                    return data;
-                } else {
-                    throw new Error(data.error || 'Erro ao criar pagamento PIX');
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
                 }
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.error || 'Erro desconhecido ao criar pedido');
+                }
+                
+                AppLogger.success(`Pedido ${result.orderId} criado com sucesso`);
+                return result;
             } catch (error) {
-                console.error('❌ Erro ao criar pagamento PIX:', error);
-                throw error;
+                AppLogger.error('Erro ao criar pedido', error);
+                throw error; // Propagar o erro para tratamento superior
             }
         }
 
+        // ✅ CORREÇÃO: Nova função para verificar status do pagamento
         async function checkPaymentStatus(orderId) {
             try {
-                const response = await fetch(`${API_CONFIG.serverUrl}/orders/${orderId}/status`);
-                const data = await response.json();
+                AppLogger.info(`Verificando status do pagamento para pedido ${orderId}`);
                 
-                if (data.success && data.order.paymentStatus === 'approved') {
-                    return { paid: true, order: data.order };
-                }
-                return { paid: false };
-            } catch (error) {
-                console.error('❌ Erro ao verificar pagamento:', error);
-                return { paid: false };
-            }
-        }
-
-        async function confirmPixPayment(orderId) {
-            try {
-                const response = await fetch(`${API_CONFIG.serverUrl}/payment/confirm-pix`, {
-                    method: 'POST',
-                    headers: {
+                // ✅ CORREÇÃO: Usar endpoint específico para verificar status
+                const response = await fetch(`${API_CONFIG.baseUrl}/api/orders/${orderId}/status`, {
+                    method: 'GET',
+                    headers: { 
                         'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ orderId })
+                        'Accept': 'application/json'
+                    }
                 });
                 
-                const data = await response.json();
-                return data;
-            } catch (error) {
-                console.error('❌ Erro ao confirmar pagamento:', error);
-                throw error;
-            }
-        }
-
-        async function updateLocalData() {
-            try {
-                const apiData = await fetchDataFromAPI();
-                
-                if (apiData.menuData) {
-                    menuData = apiData.menuData;
-                    console.log('✅ Menu data atualizado:', menuData);
-                }
-                if (apiData.restaurantConfig) {
-                    restaurantConfig = apiData.restaurantConfig;
-                    console.log('✅ Configurações atualizadas:', restaurantConfig);
-                    
-                    // Aplicar tema
-                    applyTheme(restaurantConfig.theme);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
                 }
                 
-                updateUIFromConfig();
-                renderAllMenus();
-                
-                showNotification('Cardápio atualizado com sucesso!', 'success');
-                
+                const result = await response.json();
+                return result;
             } catch (error) {
-                console.error('❌ Erro ao atualizar dados:', error);
-                showNotification('Erro ao carregar cardápio. Usando dados locais.', 'error');
+                AppLogger.error('Erro ao verificar pagamento', error);
+                return null;
             }
-        }
-
-        // ===== FUNÇÕES DE TEMA =====
-        function applyTheme(theme) {
-            if (!theme) return;
-            
-            const root = document.documentElement;
-            if (theme.primary) root.style.setProperty('--primary', theme.primary);
-            if (theme.secondary) root.style.setProperty('--secondary', theme.secondary);
-            if (theme.background) root.style.setProperty('--background', theme.background);
-            if (theme.buttonText) root.style.setProperty('--button-text', theme.buttonText);
         }
 
         // ===== FUNÇÕES PRINCIPAIS =====
         function formatPrice(price) {
-            return `R$ ${typeof price === 'number' ? price.toFixed(2) : parseFloat(price).toFixed(2)}`.replace('.', ',');
+            return `R$ ${typeof price === 'number' ? price.toFixed(2) : '0,00'}`.replace('.', ',');
         }
 
         function showNotification(message, type) {
@@ -1544,45 +1490,48 @@
         }
 
         function updateUIFromConfig() {
+            // Atualizar cores do tema
+            if (restaurantConfig.theme) {
+                document.documentElement.style.setProperty('--primary', restaurantConfig.theme.primary || '#e74c3c');
+                document.documentElement.style.setProperty('--primary-dark', restaurantConfig.theme.primary || '#c0392b');
+                document.documentElement.style.setProperty('--secondary', restaurantConfig.theme.secondary || '#f39c12');
+                document.documentElement.style.setProperty('--background', restaurantConfig.theme.background || '#f5f5f5');
+                document.documentElement.style.setProperty('--button-text', restaurantConfig.theme.buttonText || '#FFFFFF');
+            }
+
             document.getElementById('restaurant-name').textContent = restaurantConfig.restaurantName;
             document.getElementById('delivery-fee-value').textContent = restaurantConfig.deliveryFee.toFixed(2).replace('.', ',');
             document.getElementById('delivery-fee-modal').textContent = restaurantConfig.deliveryFee.toFixed(2).replace('.', ',');
             
-            const statusBadge = document.getElementById('store-status');
+            const statusBadge = document.getElementById('status-badge');
+            const statusText = document.getElementById('status-text');
             const checkoutBtn = document.getElementById('checkout-btn');
+            const connectionStatus = document.getElementById('connection-status');
             
             if (restaurantConfig.storeStatus === 'closed') {
-                statusBadge.textContent = '🔴 FECHADO';
                 statusBadge.className = 'status-badge closed';
+                statusText.textContent = 'Fechado';
                 checkoutBtn.disabled = true;
                 checkoutBtn.innerHTML = '<i class="fas fa-store-slash"></i> Loja Fechada';
+                connectionStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Loja Fechada';
             } else {
-                statusBadge.textContent = '🟢 ABERTO';
                 statusBadge.className = 'status-badge';
-                checkoutBtn.disabled = false;
-                checkoutBtn.innerHTML = '<i class="fas fa-qrcode"></i> Pagar com PIX';
+                statusText.textContent = 'Aberto';
+                checkoutBtn.disabled = cart.length === 0;
+                checkoutBtn.innerHTML = '<i class="fas fa-qrcode"></i> Finalizar com PIX';
+                connectionStatus.innerHTML = '<i class="fas fa-check-circle"></i> Conectado ao sistema';
             }
         }
 
-        // ===== SISTEMA DE CARDÁPIO COM IMAGENS =====
-        function getItemImage(item) {
-            // Se o item tem imagem, usar ela
-            if (item.image) {
-                return `<img src="${item.image}" alt="${item.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\"fas fa-camera\"></i>'">`;
+        function updateLastUpdateTime() {
+            const lastUpdateElement = document.getElementById('last-update');
+            if (restaurantConfig.lastUpdated) {
+                const lastUpdate = new Date(restaurantConfig.lastUpdated);
+                lastUpdateElement.textContent = `Última atualização: ${lastUpdate.toLocaleString('pt-BR')}`;
             }
-            
-            // Fallback para ícones baseados na categoria
-            const icons = {
-                pizzas: 'fa-pizza-slice',
-                bebidas: 'fa-wine-bottle',
-                sobremesas: 'fa-ice-cream',
-                outros: 'fa-utensils'
-            };
-            
-            const category = item.category || 'outros';
-            return `<i class="fas ${icons[category] || 'fa-utensils'}"></i>`;
         }
 
+        // ===== SISTEMA DE CARDÁPIO FLEXÍVEL =====
         function renderMenuItems(category) {
             const container = document.getElementById(`${category}-items`);
             if (!container) return;
@@ -1598,39 +1547,51 @@
                 const itemElement = document.createElement('div');
                 itemElement.className = `menu-item ${!item.available ? 'item-unavailable' : ''}`;
                 
-                const isPizza = item.prices && typeof item.prices === 'object' && !item.prices.default;
+                const isPizza = item.prices !== undefined;
                 
-                itemElement.innerHTML = `
-                    <div class="item-image">
-                        ${getItemImage(item)}
-                    </div>
-                    <div class="item-name">
-                        <span>${item.name}</span>
-                        <span class="item-price" id="price-${item.id}">
-                            ${isPizza ? formatPrice(item.prices.M) : formatPrice(item.price || item.prices?.default)}
-                        </span>
-                    </div>
-                    <div class="item-description">${item.description}</div>
-                    ${isPizza ? `
-                        <div class="pizza-sizes">
-                            <div class="size-option active" data-size="P" data-item="${item.id}">
-                                <span class="size-label">P</span>
-                                <span class="size-price">${formatPrice(item.prices.P)}</span>
-                            </div>
-                            <div class="size-option" data-size="M" data-item="${item.id}">
-                                <span class="size-label">M</span>
-                                <span class="size-price">${formatPrice(item.prices.M)}</span>
-                            </div>
-                            <div class="size-option" data-size="G" data-item="${item.id}">
-                                <span class="size-label">G</span>
-                                <span class="size-price">${formatPrice(item.prices.G)}</span>
-                            </div>
+                // ✅ CORREÇÃO: Adicionar suporte a imagens
+                const imageHtml = item.image 
+                    ? `<div class="item-image"><img src="${item.image}" alt="${item.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='🖼️ Sem imagem'"></div>`
+                    : `<div class="item-image">🖼️ Sem imagem</div>`;
+                
+                if (isPizza) {
+                    const availableSizes = Object.keys(item.prices || {});
+                    const defaultSize = availableSizes.length > 0 ? availableSizes[0] : 'M';
+                    
+                    itemElement.innerHTML = `
+                        ${imageHtml}
+                        <div class="item-name">
+                            <span>${item.name}</span>
+                            <span class="item-price" id="price-${item.id}">${formatPrice(item.prices[defaultSize])}</span>
                         </div>
-                    ` : ''}
-                    <button class="add-to-cart" data-id="${item.id}" data-size="${isPizza ? 'M' : ''}" ${!item.available ? 'disabled' : ''}>
-                        <i class="fas fa-cart-plus"></i> ${item.available ? 'Adicionar' : 'Indisponível'}
-                    </button>
-                `;
+                        <div class="item-description">${item.description}</div>
+                        ${availableSizes.length > 1 ? `
+                        <div class="pizza-sizes">
+                            ${availableSizes.map(size => `
+                                <div class="size-option ${size === defaultSize ? 'active' : ''}" data-size="${size}" data-item="${item.id}">
+                                    <span class="size-label">${getSizeLabel(size)}</span>
+                                    <span class="size-price">${formatPrice(item.prices[size])}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ` : ''}
+                        <button class="add-to-cart" data-id="${item.id}" data-size="${defaultSize}" ${!item.available ? 'disabled' : ''}>
+                            <i class="fas fa-cart-plus"></i> ${item.available ? 'Adicionar ao Carrinho' : 'Indisponível'}
+                        </button>
+                    `;
+                } else {
+                    itemElement.innerHTML = `
+                        ${imageHtml}
+                        <div class="item-name">
+                            <span>${item.name}</span>
+                            <span class="item-price">${formatPrice(item.price)}</span>
+                        </div>
+                        <div class="item-description">${item.description}</div>
+                        <button class="add-to-cart" data-id="${item.id}" ${!item.available ? 'disabled' : ''}>
+                            <i class="fas fa-cart-plus"></i> ${item.available ? 'Adicionar ao Carrinho' : 'Indisponível'}
+                        </button>
+                    `;
+                }
                 
                 container.appendChild(itemElement);
             });
@@ -1648,7 +1609,7 @@
                     });
                     this.classList.add('active');
                     
-                    const item = menuData[category].find(p => p.id == itemId);
+                    const item = menuData.pizzas.find(p => p.id == itemId);
                     if (item && item.prices) {
                         const priceElement = document.getElementById(`price-${itemId}`);
                         if (priceElement) {
@@ -1675,6 +1636,11 @@
             });
         }
 
+        function getSizeLabel(size) {
+            const labels = { 'P': 'Pequena', 'M': 'Média', 'G': 'Grande' };
+            return labels[size] || size;
+        }
+
         function renderAllMenus() {
             renderMenuItems('pizzas');
             renderMenuItems('bebidas');
@@ -1682,7 +1648,7 @@
             renderMenuItems('outros');
         }
 
-        // ===== SISTEMA DE CARRINHO =====
+        // ===== SISTEMA DE CARRINHO ROBUSTO =====
         function addToCart(itemId, size = null) {
             let item = null;
             let categoryFound = null;
@@ -1700,7 +1666,7 @@
                 return;
             }
             
-            const price = item.price || (item.prices && (item.prices.default || item.prices[size]));
+            const price = item.price || (item.prices && item.prices[size]);
             if (!price) {
                 showNotification('Erro ao adicionar item!', 'error');
                 return;
@@ -1764,6 +1730,7 @@
             const cartItemsContainer = document.querySelector('.cart-items');
             const totalElement = document.getElementById('total-value');
             const deliveryFeeDisplay = document.getElementById('delivery-fee-display');
+            const checkoutBtn = document.getElementById('checkout-btn');
             
             if (!cartItemsContainer) return;
             
@@ -1773,17 +1740,19 @@
                 cartItemsContainer.innerHTML = '<div class="empty-cart">Seu carrinho está vazio</div>';
                 totalElement.textContent = '0,00';
                 deliveryFeeDisplay.style.display = 'none';
+                checkoutBtn.disabled = true;
                 return;
             }
             
             const { subtotal, total, deliveryType } = calculateTotal();
             
             deliveryFeeDisplay.style.display = deliveryType === 'delivery' ? 'block' : 'none';
+            checkoutBtn.disabled = false;
             
             cart.forEach(item => {
                 const itemTotal = item.price * item.quantity;
                 let itemName = item.name;
-                if (item.size) itemName += ` (${item.size})`;
+                if (item.size) itemName += ` (${getSizeLabel(item.size)})`;
                 
                 const cartItemElement = document.createElement('div');
                 cartItemElement.className = 'cart-item';
@@ -1823,196 +1792,214 @@
             });
         }
 
-        // ===== SISTEMA DE PEDIDOS E PAGAMENTOS =====
-        function createOrderData(customerData, deliveryType) {
-            const { subtotal, total } = calculateTotal();
+        // ✅ CORREÇÃO: Sistema PIX completamente refeito
+        function showPixPayment(orderData) {
+            const modal = document.querySelector('.pix-modal');
+            const orderIdElement = document.getElementById('pix-order-id');
+            const amountElement = document.getElementById('pix-amount');
+            const countdownElement = document.getElementById('pix-countdown');
+            const qrCodeElement = document.getElementById('pix-qrcode').querySelector('img');
+            const statusElement = document.getElementById('payment-status');
             
-            return {
+            // Atualizar informações do pedido
+            orderIdElement.textContent = `Pedido: ${orderData.orderId}`;
+            amountElement.textContent = `Valor: ${formatPrice(orderData.payment.amount)}`;
+            qrCodeElement.src = orderData.payment.qrCode;
+            
+            // ✅ CORREÇÃO: Configurar countdown correto
+            const expireTime = new Date(orderData.payment.expiresAt).getTime();
+            updateCountdown(expireTime, countdownElement);
+            
+            // ✅ CORREÇÃO: Botão copiar PIX
+            const copyPixBtn = document.getElementById('copy-pix-btn');
+            copyPixBtn.onclick = () => {
+                navigator.clipboard.writeText(orderData.payment.qrCodeText || orderData.payment.qrCode)
+                    .then(() => showNotification('Código PIX copiado!', 'success'))
+                    .catch(() => showNotification('Erro ao copiar código', 'error'));
+            };
+            
+            // Mostrar modal
+            modal.classList.add('active');
+            
+            // ✅ CORREÇÃO: Novo sistema de monitoramento de pagamento
+            startPaymentMonitoring(orderData.orderId, statusElement, modal, expireTime, countdownElement);
+        }
+
+        // ✅ CORREÇÃO: Nova função para monitorar pagamento
+        async function startPaymentMonitoring(orderId, statusElement, modal, expireTime, countdownElement) {
+            let attempts = 0;
+            const maxAttempts = 60; // 5 minutos (5s * 60 = 300s)
+            
+            paymentCheckInterval = setInterval(async () => {
+                try {
+                    attempts++;
+                    const result = await checkPaymentStatus(orderId);
+                    
+                    if (!result) {
+                        AppLogger.error('Erro ao verificar status do pagamento');
+                        return;
+                    }
+                    
+                    // ✅ CORREÇÃO: Tratamento correto dos status
+                    switch (result.order?.paymentStatus) {
+                        case 'approved':
+                        case 'paid':
+                            // Pagamento aprovado - redirecionar para WhatsApp
+                            clearInterval(paymentCheckInterval);
+                            clearInterval(countdownInterval);
+                            
+                            statusElement.innerHTML = '✅ Pagamento confirmado! Redirecionando...';
+                            statusElement.className = 'payment-status success';
+                            
+                            // ✅ CORREÇÃO: Redirecionar para WhatsApp após confirmação
+                            setTimeout(() => {
+                                const whatsappUrl = generateWhatsAppMessage(result.order);
+                                window.open(whatsappUrl, '_blank');
+                                
+                                // Limpar carrinho e fechar modal
+                                cart = [];
+                                renderCart();
+                                modal.classList.remove('active');
+                                showNotification('Pedido confirmado! Redirecionado para WhatsApp.', 'success');
+                            }, 2000);
+                            break;
+                            
+                        case 'pending':
+                            // Pagamento pendente - continuar aguardando
+                            statusElement.innerHTML = '<div class="loading"></div> Aguardando pagamento...';
+                            statusElement.className = 'payment-status';
+                            break;
+                            
+                        case 'rejected':
+                        case 'failed':
+                            // Pagamento rejeitado - mostrar erro
+                            clearInterval(paymentCheckInterval);
+                            statusElement.innerHTML = '❌ Pagamento recusado. Tente novamente.';
+                            statusElement.className = 'payment-status error';
+                            break;
+                            
+                        default:
+                            // Status desconhecido
+                            statusElement.innerHTML = '<div class="loading"></div> Verificando pagamento...';
+                            statusElement.className = 'payment-status';
+                    }
+                    
+                    // Verificar se excedeu o número máximo de tentativas
+                    if (attempts >= maxAttempts) {
+                        clearInterval(paymentCheckInterval);
+                        statusElement.innerHTML = '⏰ Tempo esgotado. Pedido cancelado.';
+                        statusElement.className = 'payment-status error';
+                    }
+                    
+                } catch (error) {
+                    AppLogger.error('Erro ao verificar pagamento', error);
+                    
+                    if (attempts >= maxAttempts) {
+                        clearInterval(paymentCheckInterval);
+                        statusElement.innerHTML = '❌ Erro ao verificar pagamento. Tente novamente.';
+                        statusElement.className = 'payment-status error';
+                    }
+                }
+            }, 5000); // Verificar a cada 5 segundos
+        }
+
+        function updateCountdown(expireTime, element) {
+            countdownInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const distance = expireTime - now;
+                
+                if (distance < 0) {
+                    clearInterval(countdownInterval);
+                    element.textContent = 'QR Code expirado';
+                    return;
+                }
+                
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                element.textContent = `Expira em: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        // ✅ CORREÇÃO: Nova função para gerar mensagem WhatsApp
+        function generateWhatsAppMessage(order) {
+            const itemsText = order.items.map(item => 
+                `• ${item.quantity}x ${item.name}${item.size ? ` (${getSizeLabel(item.size)})` : ''} - R$ ${(item.price * item.quantity).toFixed(2)}`
+            ).join('\n');
+            
+            const message = `✅ *PEDIDO CONFIRMADO - ${order.orderId}*
+
+📋 *Itens do Pedido:*
+${itemsText}
+
+💰 *Resumo do Pedido:*
+Subtotal: R$ ${order.subtotal.toFixed(2)}
+${order.deliveryType === 'delivery' ? `Taxa de entrega: R$ ${order.deliveryFee.toFixed(2)}` : 'Retirada no local'}
+*Total: R$ ${order.total.toFixed(2)}*
+
+👤 *Cliente:*
+Nome: ${order.customer.name}
+Telefone: ${order.customer.phone}
+${order.deliveryType === 'delivery' ? `Endereço: ${order.address}` : 'Retirada no local'}
+
+💳 *Pagamento:*
+Método: PIX
+Status: ✅ CONFIRMADO
+
+⏰ *Previsão de entrega:* ${order.deliveryType === 'delivery' ? '50 minutos' : '20 minutos'}
+
+Obrigado pela preferência! 🍕`;
+            
+            return `https://wa.me/${restaurantConfig.whatsappNumber}?text=${encodeURIComponent(message)}`;
+        }
+
+        // ✅ CORREÇÃO: Função corrigida para enviar pedido via WhatsApp/PIX
+        async function sendOrderViaWhatsApp(customerData, deliveryType) {
+            const { total, subtotal } = calculateTotal();
+            
+            const orderData = {
                 customer: {
-                    name: customerData.name,
-                    phone: customerData.phone,
-                    email: customerData.email || null,
-                    cpf: customerData.cpf || null
+                    name: customerData.name.trim(),
+                    phone: customerData.phone.replace(/\D/g, '')
                 },
                 items: cart.map(item => ({
                     id: item.id,
                     name: item.name,
                     size: item.size,
                     price: item.price,
-                    quantity: item.quantity,
-                    total: item.price * item.quantity,
-                    category: item.category
+                    quantity: item.quantity
                 })),
-                deliveryType: deliveryType,
-                address: deliveryType === 'delivery' ? customerData.address : null,
+                deliveryType,
+                address: deliveryType === 'delivery' ? customerData.address.trim() : null,
                 subtotal: subtotal,
-                deliveryFee: deliveryType === 'delivery' ? restaurantConfig.deliveryFee : 0,
                 total: total,
-                notes: customerData.notes || null,
+                paymentMethod: 'pix',
                 restaurantConfig: restaurantConfig
             };
-        }
 
-        function createWhatsAppMessage(customerData, deliveryType, orderId = null, paid = false) {
-            const { subtotal, total } = calculateTotal();
-            
-            let message = `🍕 *PEDIDO ${paid ? 'CONFIRMADO' : 'NOVO'} - ${restaurantConfig.restaurantName}* 🍕\n\n`;
-            
-            if (orderId) {
-                message += `*Nº do Pedido:* ${orderId}\n`;
-            }
-            
-            message += `*Cliente:* ${customerData.name}\n`;
-            message += `*Telefone:* ${customerData.phone}\n`;
-            message += `*Tipo:* ${deliveryType === 'delivery' ? 'Entrega' : 'Retirada'}\n`;
-            
-            if (deliveryType === 'delivery' && customerData.address) {
-                message += `*Endereço:* ${customerData.address}\n`;
-            }
-            
-            if (customerData.notes) {
-                message += `*Observações:* ${customerData.notes}\n`;
-            }
-            
-            message += `\n*📦 ITENS DO PEDIDO:*\n`;
-            
-            cart.forEach(item => {
-                const itemTotal = item.price * item.quantity;
-                let itemName = item.name;
-                if (item.size) itemName += ` (${item.size})`;
-                message += `• ${itemName} x${item.quantity} - ${formatPrice(itemTotal)}\n`;
-            });
-            
-            message += `\n*💳 RESUMO DO PEDIDO:*\n`;
-            message += `Subtotal: ${formatPrice(subtotal)}\n`;
-            
-            if (deliveryType === 'delivery') {
-                message += `Taxa de Entrega: ${formatPrice(restaurantConfig.deliveryFee)}\n`;
-            }
-            
-            message += `*Total: ${formatPrice(total)}*\n`;
-            
-            if (paid) {
-                message += `\n✅ *PAGAMENTO CONFIRMADO VIA PIX*\n`;
-                message += `_Pedido será preparado imediatamente!_`;
-            } else {
-                message += `\n📱 _Pedido gerado via cardápio digital_`;
-            }
-            
-            return message;
-        }
-
-        function sendOrderViaWhatsApp(customerData, deliveryType, orderId = null, paid = false) {
-            const message = createWhatsAppMessage(customerData, deliveryType, orderId, paid);
-            const encodedMessage = encodeURIComponent(message);
-            const whatsappURL = `https://wa.me/${restaurantConfig.whatsappNumber}?text=${encodedMessage}`;
-            
-            window.open(whatsappURL, '_blank');
-            showNotification('Redirecionando para o WhatsApp...', 'success');
-            
-            // Limpar carrinho após envio bem-sucedido
-            if (paid) {
-                cart = [];
-                renderCart();
-            }
-            
-            return true;
-        }
-
-        async function processPixPayment(customerData, deliveryType) {
             try {
-                const orderData = createOrderData(customerData, deliveryType);
+                AppLogger.info('Enviando pedido para API...');
+                const orderResult = await createOrder(orderData);
                 
-                showNotification('Processando pagamento PIX...', 'success');
-                
-                const paymentResult = await createPixPayment(orderData);
-                
-                if (paymentResult.success) {
-                    currentOrder = {
-                        orderId: paymentResult.orderId,
-                        customer: customerData,
-                        deliveryType: deliveryType,
-                        total: orderData.total
+                if (orderResult && orderResult.success) {
+                    currentOrder = orderResult;
+                    
+                    // ✅ CORREÇÃO: Estrutura de dados corrigida
+                    const pixData = {
+                        orderId: orderResult.orderId,
+                        payment: orderResult.payment
                     };
                     
-                    // Mostrar modal PIX
-                    showPixModal(paymentResult);
-                    
-                    // Iniciar verificação de pagamento
-                    startPaymentChecking(paymentResult.orderId);
-                    
+                    showPixPayment(pixData);
+                    return true;
                 } else {
-                    throw new Error(paymentResult.error || 'Erro ao processar pagamento');
+                    throw new Error('Resposta inválida da API');
                 }
-                
             } catch (error) {
-                console.error('❌ Erro no processamento PIX:', error);
-                showNotification('Erro ao processar pagamento PIX: ' + error.message, 'error');
+                AppLogger.error('Erro ao criar pedido PIX', error);
+                showNotification('Erro ao processar pedido. Tente novamente.', 'error');
+                return false;
             }
-        }
-
-        function showPixModal(paymentData) {
-            const modal = document.querySelector('.pix-modal');
-            const qrcodeImage = document.getElementById('qrcode-image');
-            const pixCodeText = document.getElementById('pix-code-text');
-            const pixOrderId = document.getElementById('pix-order-id');
-            const pixAmount = document.getElementById('pix-amount');
-            const pixExpires = document.getElementById('pix-expires');
-            
-            // Atualizar informações do pedido
-            pixOrderId.textContent = paymentData.orderId;
-            pixAmount.textContent = currentOrder.total.toFixed(2).replace('.', ',');
-            
-            // Calcular expiração
-            const expires = new Date(paymentData.payment.expiresAt);
-            pixExpires.textContent = expires.toLocaleString('pt-BR');
-            
-            // Mostrar QR Code
-            if (paymentData.payment.qrCode) {
-                qrcodeImage.innerHTML = `<img src="${paymentData.payment.qrCode}" alt="QR Code PIX">`;
-            }
-            
-            // Mostrar código PIX
-            if (paymentData.payment.qrCodeText) {
-                pixCodeText.textContent = paymentData.payment.qrCodeText;
-            }
-            
-            modal.classList.add('active');
-        }
-
-        function startPaymentChecking(orderId) {
-            // Verificar pagamento a cada 5 segundos
-            paymentCheckInterval = setInterval(async () => {
-                try {
-                    const status = await checkPaymentStatus(orderId);
-                    
-                    if (status.paid) {
-                        clearInterval(paymentCheckInterval);
-                        
-                        // Atualizar UI para sucesso
-                        document.getElementById('payment-status').className = 'payment-status success';
-                        document.getElementById('payment-status').innerHTML = '<i class="fas fa-check-circle"></i> Pagamento confirmado!';
-                        
-                        // Mostrar botão de confirmação
-                        document.getElementById('pix-confirm').style.display = 'block';
-                        
-                        showNotification('Pagamento confirmado! Redirecionando para WhatsApp...', 'success');
-                        
-                        // Redirecionar automaticamente para WhatsApp após 3 segundos
-                        setTimeout(() => {
-                            sendOrderViaWhatsApp(
-                                currentOrder.customer, 
-                                currentOrder.deliveryType, 
-                                currentOrder.orderId, 
-                                true
-                            );
-                            document.querySelector('.pix-modal').classList.remove('active');
-                        }, 3000);
-                    }
-                } catch (error) {
-                    console.error('Erro ao verificar pagamento:', error);
-                }
-            }, 5000);
         }
 
         function validateForm(customerData, deliveryType) {
@@ -2044,22 +2031,70 @@
             return true;
         }
 
-        // ===== INICIALIZAÇÃO =====
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Iniciando cardápio digital...');
-            
-            // Carregar dados iniciais
-            await updateLocalData();
-            renderCart();
-            
+        // ===== SISTEMA DE ATUALIZAÇÃO AUTOMÁTICA =====
+        async function loadInitialData() {
+            try {
+                AppLogger.info('Carregando dados iniciais...');
+                const apiData = await fetchDataFromAPI();
+                
+                if (apiData.menuData) {
+                    menuData = apiData.menuData;
+                }
+                if (apiData.restaurantConfig) {
+                    restaurantConfig = apiData.restaurantConfig;
+                }
+                if (apiData.theme) {
+                    restaurantConfig.theme = apiData.theme;
+                }
+                
+                updateUIFromConfig();
+                updateLastUpdateTime();
+                renderAllMenus();
+                
+                AppLogger.success('Dados carregados e interface atualizada');
+                
+            } catch (error) {
+                AppLogger.error('Erro ao carregar dados', error);
+                showNotification('Erro ao carregar cardápio. Usando dados locais.', 'error');
+            }
+        }
+
+        function setupAutoRefresh() {
             // Atualizar dados a cada 30 segundos
-            setInterval(updateLocalData, 30000);
+            dataRefreshInterval = setInterval(loadInitialData, 30000);
+        }
+
+        // ===== INICIALIZAÇÃO ROBUSTA =====
+        document.addEventListener('DOMContentLoaded', async function() {
+            AppLogger.info('🚀 Iniciando cardápio digital...');
             
-            // Event listeners para interface
+            try {
+                // Carregar dados iniciais
+                await loadInitialData();
+                renderCart();
+                
+                // Configurar atualização automática
+                setupAutoRefresh();
+                
+                // Configurar event listeners
+                setupEventListeners();
+                
+                AppLogger.success('✅ Cardápio digital iniciado com sucesso!');
+                showNotification('Sistema carregado com sucesso!', 'success');
+                
+            } catch (error) {
+                AppLogger.error('Erro crítico na inicialização', error);
+                showNotification('Erro ao iniciar o sistema. Recarregue a página.', 'error');
+            }
+        });
+
+        function setupEventListeners() {
+            // Admin panel
             document.getElementById('adminToggle').addEventListener('click', function() {
                 document.getElementById('adminStatus').classList.toggle('active');
             });
 
+            // Categorias do menu
             document.querySelectorAll('.category-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
@@ -2069,6 +2104,7 @@
                 });
             });
             
+            // Botão de checkout
             document.getElementById('checkout-btn').addEventListener('click', function() {
                 if (cart.length === 0) {
                     showNotification('Seu carrinho está vazio! Adicione itens antes de finalizar o pedido.', 'error');
@@ -2077,70 +2113,48 @@
                 document.querySelector('.whatsapp-modal').classList.add('active');
             });
             
+            // Botão flutuante do WhatsApp
             document.querySelector('.whatsapp-float').addEventListener('click', function() {
                 document.querySelector('.whatsapp-modal').classList.add('active');
             });
             
+            // Modal de checkout
             document.getElementById('modal-cancel').addEventListener('click', function() {
                 document.querySelector('.whatsapp-modal').classList.remove('active');
             });
             
-            document.getElementById('modal-pix').addEventListener('click', function() {
+            document.getElementById('modal-send').addEventListener('click', async function() {
                 const deliveryType = document.querySelector('input[name="delivery-type"]:checked').value;
                 const customerData = {
                     name: document.getElementById('customer-name').value,
                     phone: document.getElementById('customer-phone').value,
-                    address: document.getElementById('customer-address').value,
-                    notes: document.getElementById('customer-notes').value
+                    address: document.getElementById('customer-address').value
                 };
                 
                 if (validateForm(customerData, deliveryType)) {
-                    processPixPayment(customerData, deliveryType);
-                    document.querySelector('.whatsapp-modal').classList.remove('active');
-                }
-            });
-            
-            document.getElementById('pix-cancel').addEventListener('click', function() {
-                document.querySelector('.pix-modal').classList.remove('active');
-                if (paymentCheckInterval) {
-                    clearInterval(paymentCheckInterval);
-                }
-            });
-            
-            document.getElementById('pix-confirm').addEventListener('click', function() {
-                if (currentOrder) {
-                    sendOrderViaWhatsApp(
-                        currentOrder.customer, 
-                        currentOrder.deliveryType, 
-                        currentOrder.orderId, 
-                        true
-                    );
-                    document.querySelector('.pix-modal').classList.remove('active');
+                    // Mostrar loading no botão
+                    const sendBtn = this;
+                    const originalText = sendBtn.innerHTML;
+                    sendBtn.innerHTML = '<div class="loading"></div> Processando...';
+                    sendBtn.disabled = true;
                     
-                    // Limpar formulário
-                    document.getElementById('customer-name').value = '';
-                    document.getElementById('customer-phone').value = '';
-                    document.getElementById('customer-address').value = '';
-                    document.getElementById('customer-notes').value = '';
+                    const success = await sendOrderViaWhatsApp(customerData, deliveryType);
+                    
+                    // Restaurar botão
+                    sendBtn.innerHTML = originalText;
+                    sendBtn.disabled = false;
+                    
+                    if (success) {
+                        document.querySelector('.whatsapp-modal').classList.remove('active');
+                        // Limpar formulário
+                        document.getElementById('customer-name').value = '';
+                        document.getElementById('customer-phone').value = '';
+                        document.getElementById('customer-address').value = '';
+                    }
                 }
             });
             
-            document.getElementById('copy-pix-btn').addEventListener('click', function() {
-                const pixCode = document.getElementById('pix-code-text').textContent;
-                navigator.clipboard.writeText(pixCode).then(() => {
-                    showNotification('Código PIX copiado!', 'success');
-                }).catch(() => {
-                    // Fallback para navegadores mais antigos
-                    const textArea = document.createElement('textarea');
-                    textArea.value = pixCode;
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    showNotification('Código PIX copiado!', 'success');
-                });
-            });
-            
+            // Opções de entrega
             document.querySelectorAll('input[name="delivery-type"]').forEach(radio => {
                 radio.addEventListener('change', function() {
                     document.getElementById('address-group').style.display = this.value === 'delivery' ? 'block' : 'none';
@@ -2148,23 +2162,53 @@
                 });
             });
             
-            document.querySelector('.whatsapp-modal').addEventListener('click', function(e) {
-                if (e.target === this) this.classList.remove('active');
+            // Fechar modais
+            document.querySelectorAll('.whatsapp-modal, .pix-modal').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.remove('active');
+                        if (this.classList.contains('pix-modal')) {
+                            clearInterval(paymentCheckInterval);
+                            clearInterval(countdownInterval);
+                        }
+                    }
+                });
             });
             
-            document.querySelector('.pix-modal').addEventListener('click', function(e) {
-                if (e.target === this) this.classList.remove('active');
+            // Cancelar pedido PIX
+            document.getElementById('pix-cancel').addEventListener('click', function() {
+                document.querySelector('.pix-modal').classList.remove('active');
+                clearInterval(paymentCheckInterval);
+                clearInterval(countdownInterval);
+                showNotification('Pedido cancelado.', 'error');
             });
             
-            // Fechar modal com ESC
+            // Fechar modais com ESC
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
-                    document.querySelector('.whatsapp-modal').classList.remove('active');
-                    document.querySelector('.pix-modal').classList.remove('active');
+                    document.querySelectorAll('.whatsapp-modal, .pix-modal').forEach(modal => {
+                        modal.classList.remove('active');
+                    });
+                    clearInterval(paymentCheckInterval);
+                    clearInterval(countdownInterval);
                 }
             });
-            
-            console.log('✅ Cardápio digital iniciado com sucesso!');
+
+            // Recarregar dados manualmente com F5
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'F5') {
+                    e.preventDefault();
+                    loadInitialData();
+                    showNotification('Dados recarregados!', 'success');
+                }
+            });
+        }
+
+        // Graceful shutdown
+        window.addEventListener('beforeunload', function() {
+            if (paymentCheckInterval) clearInterval(paymentCheckInterval);
+            if (countdownInterval) clearInterval(countdownInterval);
+            if (dataRefreshInterval) clearInterval(dataRefreshInterval);
         });
     </script>
 </body>
