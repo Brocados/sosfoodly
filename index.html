@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -16,19 +16,18 @@
         :root {
             --primary: #e74c3c;
             --primary-dark: #c0392b;
-            --secondary: #2c3e50;
-            --background: #f8f9fa;
-            --button-text: #ffffff;
+            --secondary: #f39c12;
             --light: #f5f5f5;
-            --dark: #333333;
-            --gray: #666666;
+            --dark: #333;
+            --gray: #666;
             --success: #27ae60;
             --warning: #f39c12;
-            --admin: #34495e;
+            --admin: #2c3e50;
+            --pix: #32BCAD;
         }
         
         body {
-            background: var(--background);
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8f4f8 100%);
             color: var(--dark);
             line-height: 1.6;
             min-height: 100vh;
@@ -43,7 +42,7 @@
         header {
             text-align: center;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: var(--button-text);
+            color: white;
             padding: 25px 0;
             border-radius: 20px;
             margin-bottom: 25px;
@@ -82,7 +81,7 @@
         
         .logo i {
             margin-right: 15px;
-            color: var(--button-text);
+            color: var(--secondary);
             animation: bounce 2s infinite;
         }
         
@@ -109,6 +108,7 @@
             border-radius: 20px;
             font-size: 0.9rem;
             font-weight: bold;
+            z-index: 2;
         }
         
         .status-badge.closed {
@@ -226,8 +226,8 @@
         
         .menu-items {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
         }
         
         .menu-item {
@@ -238,7 +238,6 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
         }
         
         .menu-item::before {
@@ -260,27 +259,6 @@
             transform: translateY(-8px);
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
             border-color: var(--primary);
-        }
-        
-        .item-image {
-            width: 100%;
-            height: 200px;
-            border-radius: 12px;
-            object-fit: cover;
-            margin-bottom: 15px;
-            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--gray);
-            font-size: 3rem;
-        }
-        
-        .item-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 12px;
         }
         
         .item-name {
@@ -307,6 +285,7 @@
             border-radius: 10px;
             overflow: hidden;
             border: 1px solid #e0e0e0;
+            flex-wrap: wrap;
         }
         
         .size-option {
@@ -317,6 +296,7 @@
             transition: all 0.3s ease;
             font-weight: bold;
             position: relative;
+            min-width: 80px;
         }
         
         .size-option:not(:last-child) {
@@ -349,7 +329,7 @@
         
         .add-to-cart {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: var(--button-text);
+            color: white;
             border: none;
             padding: 12px 20px;
             border-radius: 10px;
@@ -454,7 +434,7 @@
         
         .checkout-btn {
             background: linear-gradient(135deg, var(--success), #219653);
-            color: var(--button-text);
+            color: white;
             border: none;
             padding: 18px 25px;
             border-radius: 15px;
@@ -585,6 +565,10 @@
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
         }
         
+        .pix-modal .modal-content::before {
+            background: linear-gradient(135deg, var(--pix), #229c8d);
+        }
+        
         .modal-title {
             color: var(--primary);
             margin-bottom: 25px;
@@ -593,14 +577,13 @@
             font-size: 1.5rem;
         }
         
-        .modal-title i {
-            margin-right: 12px;
-            color: #25D366;
-            font-size: 1.8rem;
+        .pix-modal .modal-title {
+            color: var(--pix);
         }
         
-        .pix-title i {
-            color: #32BCAD;
+        .modal-title i {
+            margin-right: 12px;
+            font-size: 1.8rem;
         }
         
         .form-group {
@@ -615,7 +598,7 @@
             font-size: 1rem;
         }
         
-        .form-group input, .form-group textarea {
+        .form-group input {
             width: 100%;
             padding: 15px;
             border: 2px solid #e0e0e0;
@@ -623,10 +606,9 @@
             font-size: 1rem;
             transition: all 0.3s ease;
             background: #f8f9fa;
-            resize: vertical;
         }
         
-        .form-group input:focus, .form-group textarea:focus {
+        .form-group input:focus {
             border-color: var(--primary);
             background: white;
             box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
@@ -722,90 +704,47 @@
             box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
         }
         
-        .modal-btn.pix {
-            background: linear-gradient(135deg, #32BCAD, #2a9d8f);
-            color: white;
-            box-shadow: 0 5px 15px rgba(50, 188, 173, 0.3);
-        }
-        
-        .modal-btn.send:hover, .modal-btn.pix:hover {
+        .modal-btn.send:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);
         }
         
-        .pix-container {
+        .pix-content {
             text-align: center;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 15px;
-            margin-bottom: 20px;
         }
         
-        .qrcode-container {
-            margin: 20px 0;
-            padding: 20px;
+        .qrcode {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 10px;
             background: white;
-            border-radius: 12px;
-            border: 2px solid #e0e0e0;
-        }
-        
-        .qrcode-image {
-            max-width: 250px;
-            margin: 0 auto 15px;
-        }
-        
-        .qrcode-image img {
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
-        }
-        
-        .pix-code {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            border: 1px dashed #ccc;
-            word-break: break-all;
-            font-family: monospace;
-            font-size: 0.9rem;
-        }
-        
-        .copy-pix-btn {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            margin: 10px 0;
-            transition: all 0.3s ease;
-        }
-        
-        .copy-pix-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
         }
         
         .payment-status {
-            text-align: center;
-            margin: 20px 0;
             padding: 15px;
             border-radius: 10px;
-            font-weight: bold;
-        }
-        
-        .payment-status.pending {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
+            margin: 20px 0;
+            background: #f8f9fa;
+            border-left: 4px solid var(--warning);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
         
         .payment-status.success {
-            background: #d1edff;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
+            background: #d4edda;
+            border-left-color: var(--success);
+            color: #155724;
+        }
+        
+        .payment-status.error {
+            background: #f8d7da;
+            border-left-color: var(--primary);
+            color: #721c24;
         }
         
         .notification {
@@ -858,7 +797,7 @@
         }
         
         .admin-btn:hover {
-            background: #2c3e50;
+            background: #34495e;
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.4);
         }
@@ -914,7 +853,6 @@
             border-top: 3px solid var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-left: 10px;
         }
         
         @keyframes spin {
@@ -1024,8 +962,9 @@
                 top: 60px;
             }
             
-            .qrcode-image {
-                max-width: 200px;
+            .qrcode {
+                width: 150px;
+                height: 150px;
             }
         }
 
@@ -1102,7 +1041,45 @@
             transform: none;
             box-shadow: none;
         }
-     </style>
+        
+        .order-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid var(--pix);
+        }
+        
+        .order-id {
+            font-weight: bold;
+            color: var(--pix);
+            font-size: 1.1rem;
+        }
+        
+        .countdown {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+        
+        .system-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        
+        .last-update {
+            font-size: 0.8rem;
+            color: var(--gray);
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -1255,14 +1232,8 @@
                     <div class="countdown" id="pix-countdown">Expira em: 10:00</div>
                 </div>
                 
-                <div class="qrcode" id="pix-qrcode">
-                    <img src="" alt="QR Code PIX">
-                </div>
+                <img src="" alt="QR Code PIX" class="qrcode" id="pix-qrcode">
                 <p>Escaneie o QR Code com seu app bancário</p>
-                
-                <button class="copy-pix-btn" id="copy-pix-btn">
-                    <i class="fas fa-copy"></i> Copiar Código PIX
-                </button>
                 
                 <div class="payment-status" id="payment-status">
                     <div class="loading"></div>
@@ -1297,12 +1268,13 @@
     <script>
         // ===== CONFIGURAÇÃO DA API =====
         const API_CONFIG = {
-            binId: '68d845acae596e708ffdff50',
-            apiKey: '$2a$10$dk861I8m/eijJrsa4fa8mu8y1h1fZf8LgxilOkEvmxQEiUH6p11o6',
-            baseUrl: 'https://api.jsonbin.io/v3/b',
-            serverUrl: window.location.hostname === 'localhost' 
-                ? 'http://localhost:3001/api' 
-                : 'https://api.sosfoodly.com.br'
+            baseUrl: window.location.hostname.includes("localhost") 
+                ? "http://localhost:3001"                  
+                : "https://api.sosfoodly.com.br",
+            jsonbinConfig: {
+                binId: "68d845acae596e708ffdff50",
+                apiKey: "$2a$10$dk861I8m/eijJrsa4fa8mu8y1h1fZf8LgxilOkEvmxQEiUH6p11o6"
+            }
         };
 
         // Dados globais
@@ -1363,22 +1335,8 @@
             return {
                 menuData: {
                     pizzas: [
-                        { 
-                            id: 1, 
-                            name: "Margherita", 
-                            description: "Molho de tomate, mussarela, manjericão fresco", 
-                            prices: { P: 25.90, M: 35.90, G: 45.90 }, 
-                            available: true,
-                            image: null
-                        },
-                        { 
-                            id: 2, 
-                            name: "Calabresa", 
-                            description: "Molho de tomate, mussarela, calabresa fatiada, cebola", 
-                            prices: { P: 28.90, M: 38.90, G: 48.90 }, 
-                            available: true,
-                            image: null
-                        }
+                        { id: 1, name: "Margherita", description: "Molho de tomate, mussarela, manjericão fresco", prices: { P: 25.90, M: 35.90, G: 45.90 }, available: true },
+                        { id: 2, name: "Calabresa", description: "Molho de tomate, mussarela, calabresa fatiada, cebola", prices: { P: 28.90, M: 38.90, G: 48.90 }, available: true }
                     ],
                     bebidas: [],
                     sobremesas: [],
@@ -1400,12 +1358,6 @@
                         deliveryMinutes: 50,
                         pickupMinutes: 20
                     }
-                },
-                theme: {
-                    primary: "#e74c3c",
-                    secondary: "#f39c12",
-                    background: "#f5f5f5",
-                    buttonText: "#FFFFFF"
                 },
                 orders: [],
                 lastUpdated: new Date().toISOString()
@@ -1489,15 +1441,6 @@
         }
 
         function updateUIFromConfig() {
-            // Atualizar cores do tema
-            if (restaurantConfig.theme) {
-                document.documentElement.style.setProperty('--primary', restaurantConfig.theme.primary || '#e74c3c');
-                document.documentElement.style.setProperty('--primary-dark', restaurantConfig.theme.primary || '#c0392b');
-                document.documentElement.style.setProperty('--secondary', restaurantConfig.theme.secondary || '#f39c12');
-                document.documentElement.style.setProperty('--background', restaurantConfig.theme.background || '#f5f5f5');
-                document.documentElement.style.setProperty('--button-text', restaurantConfig.theme.buttonText || '#FFFFFF');
-            }
-
             document.getElementById('restaurant-name').textContent = restaurantConfig.restaurantName;
             document.getElementById('delivery-fee-value').textContent = restaurantConfig.deliveryFee.toFixed(2).replace('.', ',');
             document.getElementById('delivery-fee-modal').textContent = restaurantConfig.deliveryFee.toFixed(2).replace('.', ',');
@@ -1548,17 +1491,11 @@
                 
                 const isPizza = item.prices !== undefined;
                 
-                // ✅ CORREÇÃO: Adicionar suporte a imagens
-                const imageHtml = item.image 
-                    ? `<div class="item-image"><img src="${item.image}" alt="${item.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='🖼️ Sem imagem'"></div>`
-                    : `<div class="item-image">🖼️ Sem imagem</div>`;
-                
                 if (isPizza) {
                     const availableSizes = Object.keys(item.prices || {});
                     const defaultSize = availableSizes.length > 0 ? availableSizes[0] : 'M';
                     
                     itemElement.innerHTML = `
-                        ${imageHtml}
                         <div class="item-name">
                             <span>${item.name}</span>
                             <span class="item-price" id="price-${item.id}">${formatPrice(item.prices[defaultSize])}</span>
@@ -1580,7 +1517,6 @@
                     `;
                 } else {
                     itemElement.innerHTML = `
-                        ${imageHtml}
                         <div class="item-name">
                             <span>${item.name}</span>
                             <span class="item-price">${formatPrice(item.price)}</span>
@@ -1797,7 +1733,7 @@
             const orderIdElement = document.getElementById('pix-order-id');
             const amountElement = document.getElementById('pix-amount');
             const countdownElement = document.getElementById('pix-countdown');
-            const qrCodeElement = document.getElementById('pix-qrcode').querySelector('img');
+            const qrCodeElement = document.getElementById('pix-qrcode');
             const statusElement = document.getElementById('payment-status');
             
             // Atualizar informações do pedido
@@ -1808,14 +1744,6 @@
             // ✅ CORREÇÃO: Configurar countdown correto
             const expireTime = new Date(orderData.payment.expiresAt).getTime();
             updateCountdown(expireTime, countdownElement);
-            
-            // ✅ CORREÇÃO: Botão copiar PIX
-            const copyPixBtn = document.getElementById('copy-pix-btn');
-            copyPixBtn.onclick = () => {
-                navigator.clipboard.writeText(orderData.payment.qrCodeText || orderData.payment.qrCode)
-                    .then(() => showNotification('Código PIX copiado!', 'success'))
-                    .catch(() => showNotification('Erro ao copiar código', 'error'));
-            };
             
             // Mostrar modal
             modal.classList.add('active');
@@ -1840,9 +1768,8 @@
                     }
                     
                     // ✅ CORREÇÃO: Tratamento correto dos status
-                    switch (result.order?.paymentStatus) {
+                    switch (result.status) {
                         case 'approved':
-                        case 'paid':
                             // Pagamento aprovado - redirecionar para WhatsApp
                             clearInterval(paymentCheckInterval);
                             clearInterval(countdownInterval);
@@ -1850,9 +1777,9 @@
                             statusElement.innerHTML = '✅ Pagamento confirmado! Redirecionando...';
                             statusElement.className = 'payment-status success';
                             
-                            // ✅ CORREÇÃO: Redirecionar para WhatsApp após confirmação
+                            // Redirecionar para WhatsApp após confirmação
                             setTimeout(() => {
-                                const whatsappUrl = generateWhatsAppMessage(result.order);
+                                const whatsappUrl = `https://wa.me/${result.whatsappNumber || restaurantConfig.whatsappNumber}?text=${encodeURIComponent(result.whatsappMessage)}`;
                                 window.open(whatsappUrl, '_blank');
                                 
                                 // Limpar carrinho e fechar modal
@@ -1870,7 +1797,6 @@
                             break;
                             
                         case 'rejected':
-                        case 'failed':
                             // Pagamento rejeitado - mostrar erro
                             clearInterval(paymentCheckInterval);
                             statusElement.innerHTML = '❌ Pagamento recusado. Tente novamente.';
@@ -1920,38 +1846,6 @@
             }, 1000);
         }
 
-        // ✅ CORREÇÃO: Nova função para gerar mensagem WhatsApp
-        function generateWhatsAppMessage(order) {
-            const itemsText = order.items.map(item => 
-                `• ${item.quantity}x ${item.name}${item.size ? ` (${getSizeLabel(item.size)})` : ''} - R$ ${(item.price * item.quantity).toFixed(2)}`
-            ).join('\n');
-            
-            const message = `✅ *PEDIDO CONFIRMADO - ${order.orderId}*
-
-📋 *Itens do Pedido:*
-${itemsText}
-
-💰 *Resumo do Pedido:*
-Subtotal: R$ ${order.subtotal.toFixed(2)}
-${order.deliveryType === 'delivery' ? `Taxa de entrega: R$ ${order.deliveryFee.toFixed(2)}` : 'Retirada no local'}
-*Total: R$ ${order.total.toFixed(2)}*
-
-👤 *Cliente:*
-Nome: ${order.customer.name}
-Telefone: ${order.customer.phone}
-${order.deliveryType === 'delivery' ? `Endereço: ${order.address}` : 'Retirada no local'}
-
-💳 *Pagamento:*
-Método: PIX
-Status: ✅ CONFIRMADO
-
-⏰ *Previsão de entrega:* ${order.deliveryType === 'delivery' ? '50 minutos' : '20 minutos'}
-
-Obrigado pela preferência! 🍕`;
-            
-            return `https://wa.me/${restaurantConfig.whatsappNumber}?text=${encodeURIComponent(message)}`;
-        }
-
         // ✅ CORREÇÃO: Função corrigida para enviar pedido via WhatsApp/PIX
         async function sendOrderViaWhatsApp(customerData, deliveryType) {
             const { total, subtotal } = calculateTotal();
@@ -1972,8 +1866,7 @@ Obrigado pela preferência! 🍕`;
                 address: deliveryType === 'delivery' ? customerData.address.trim() : null,
                 subtotal: subtotal,
                 total: total,
-                paymentMethod: 'pix',
-                restaurantConfig: restaurantConfig
+                paymentMethod: 'pix'
             };
 
             try {
@@ -2041,9 +1934,6 @@ Obrigado pela preferência! 🍕`;
                 }
                 if (apiData.restaurantConfig) {
                     restaurantConfig = apiData.restaurantConfig;
-                }
-                if (apiData.theme) {
-                    restaurantConfig.theme = apiData.theme;
                 }
                 
                 updateUIFromConfig();
