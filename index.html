@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -21,9 +21,7 @@
             --dark: #333;
             --gray: #666;
             --success: #27ae60;
-            --warning: #f39c12;
             --admin: #2c3e50;
-            --pix: #32BCAD;
         }
         
         body {
@@ -96,23 +94,6 @@
             opacity: 0.9;
             position: relative;
             z-index: 1;
-        }
-        
-        .status-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: var(--success);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            z-index: 2;
-        }
-        
-        .status-badge.closed {
-            background: var(--primary);
         }
         
         .whatsapp-float {
@@ -285,7 +266,6 @@
             border-radius: 10px;
             overflow: hidden;
             border: 1px solid #e0e0e0;
-            flex-wrap: wrap;
         }
         
         .size-option {
@@ -296,7 +276,6 @@
             transition: all 0.3s ease;
             font-weight: bold;
             position: relative;
-            min-width: 80px;
         }
         
         .size-option:not(:last-child) {
@@ -513,7 +492,7 @@
             text-align: center;
         }
         
-        .whatsapp-modal, .pix-modal {
+        .whatsapp-modal {
             display: none;
             position: fixed;
             top: 0;
@@ -528,7 +507,7 @@
             backdrop-filter: blur(5px);
         }
         
-        .whatsapp-modal.active, .pix-modal.active {
+        .whatsapp-modal.active {
             display: flex;
             animation: modalAppear 0.3s ease;
         }
@@ -565,10 +544,6 @@
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
         }
         
-        .pix-modal .modal-content::before {
-            background: linear-gradient(135deg, var(--pix), #229c8d);
-        }
-        
         .modal-title {
             color: var(--primary);
             margin-bottom: 25px;
@@ -577,12 +552,9 @@
             font-size: 1.5rem;
         }
         
-        .pix-modal .modal-title {
-            color: var(--pix);
-        }
-        
         .modal-title i {
             margin-right: 12px;
+            color: #25D366;
             font-size: 1.8rem;
         }
         
@@ -709,44 +681,6 @@
             box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);
         }
         
-        .pix-content {
-            text-align: center;
-        }
-        
-        .qrcode {
-            width: 200px;
-            height: 200px;
-            margin: 20px auto;
-            border: 2px solid #eee;
-            border-radius: 10px;
-            padding: 10px;
-            background: white;
-        }
-        
-        .payment-status {
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            background: #f8f9fa;
-            border-left: 4px solid var(--warning);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        
-        .payment-status.success {
-            background: #d4edda;
-            border-left-color: var(--success);
-            color: #155724;
-        }
-        
-        .payment-status.error {
-            background: #f8d7da;
-            border-left-color: var(--primary);
-            color: #721c24;
-        }
-        
         .notification {
             position: fixed;
             top: 25px;
@@ -853,11 +787,172 @@
             border-top: 3px solid var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin-left: 10px;
         }
         
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        /* Estilos para o popup de pagamento */
+        .payment-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .payment-modal.active {
+            display: flex;
+            animation: modalAppear 0.3s ease;
+        }
+        
+        .payment-content {
+            background: white;
+            border-radius: 25px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .payment-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+        
+        .payment-title {
+            color: var(--primary);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            text-align: center;
+            justify-content: center;
+        }
+        
+        .payment-title i {
+            margin-right: 12px;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+        
+        .payment-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .payment-btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .payment-btn.qr {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        .payment-btn.qr:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
+        }
+        
+        .payment-btn.cancel {
+            background: #f8f9fa;
+            color: var(--gray);
+            border: 2px solid #e0e0e0;
+        }
+        
+        .payment-btn.cancel:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+        
+        .qr-code-container {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+        
+        .qr-code-container.active {
+            display: block;
+            animation: slideUp 0.5s ease;
+        }
+        
+        .qr-code {
+            max-width: 100%;
+            height: auto;
+            margin: 15px 0;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .payment-info {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: var(--gray);
+            text-align: center;
+        }
+        
+        .payment-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .payment-detail {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .payment-detail:last-child {
+            margin-bottom: 0;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        
+        .divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 20px 0;
         }
 
         @media (max-width: 768px) {
@@ -962,9 +1057,9 @@
                 top: 60px;
             }
             
-            .qrcode {
-                width: 150px;
-                height: 150px;
+            .payment-content {
+                padding: 25px 20px;
+                margin: 10px;
             }
         }
 
@@ -991,6 +1086,10 @@
             }
             
             .modal-title {
+                font-size: 1.3rem;
+            }
+            
+            .payment-title {
                 font-size: 1.3rem;
             }
         }
@@ -1041,62 +1140,16 @@
             transform: none;
             box-shadow: none;
         }
-        
-        .order-info {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            border-left: 4px solid var(--pix);
-        }
-        
-        .order-id {
-            font-weight: bold;
-            color: var(--pix);
-            font-size: 1.1rem;
-        }
-        
-        .countdown {
-            font-size: 0.9rem;
-            color: var(--gray);
-            margin-top: 5px;
-        }
-        
-        .system-status {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 10px;
-            background: #f8f9fa;
-        }
-        
-        .last-update {
-            font-size: 0.8rem;
-            color: var(--gray);
-            text-align: center;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="status-badge" id="status-badge">
-                <i class="fas fa-store"></i> <span id="status-text">Aberto</span>
-            </div>
             <div class="logo">
                 <i class="fas fa-pizza-slice"></i>
                 <span id="restaurant-name">Brocados.com</span>
             </div>
             <p class="tagline">Sabor que conquista, preço que surpreende!</p>
-            <div class="system-status">
-                <i class="fas fa-sync-alt fa-spin"></i>
-                <span id="connection-status">Conectado ao sistema</span>
-            </div>
-            <div class="last-update" id="last-update"></div>
         </header>
         
         <div class="menu-categories">
@@ -1157,10 +1210,10 @@
             <div class="cart-items">
                 <div class="empty-cart">Seu carrinho está vazio</div>
             </div>
-            <div class="delivery-fee" id="delivery-fee-display" style="display: none;">Taxa de entrega: R$ <span id="delivery-fee-value">5,00</span></div>
+            <div class="delivery-fee" id="delivery-fee-display" style="display: none;">Taxa de entrega: R$ <span id="delivery-fee-value">3,00</span></div>
             <div class="cart-total">Total: R$ <span id="total-value">0,00</span></div>
             <button class="checkout-btn" id="checkout-btn">
-                <i class="fas fa-qrcode"></i> Finalizar com PIX
+                <i class="fas fa-shopping-bag"></i> Finalizar Pedido
             </button>
         </div>
     </div>
@@ -1169,10 +1222,11 @@
         <i class="fab fa-whatsapp"></i>
     </div>
 
+    <!-- Modal de Finalização de Pedido -->
     <div class="whatsapp-modal">
         <div class="modal-content">
             <h2 class="modal-title">
-                <i class="fab fa-whatsapp"></i> Finalizar Pedido
+                <i class="fas fa-shopping-bag"></i> Finalizar Pedido
             </h2>
             <div class="form-group">
                 <label for="customer-name">Seu Nome:</label>
@@ -1181,6 +1235,14 @@
             <div class="form-group">
                 <label for="customer-phone">Seu WhatsApp:</label>
                 <input type="tel" id="customer-phone" placeholder="(85) 98606-3698" required>
+            </div>
+            <div class="form-group">
+                <label for="customer-email">Seu Email:</label>
+                <input type="email" id="customer-email" placeholder="seu@email.com" required>
+            </div>
+            <div class="form-group">
+                <label for="customer-cpf">Seu CPF:</label>
+                <input type="text" id="customer-cpf" placeholder="000.000.000-00" required>
             </div>
             
             <div class="form-group">
@@ -1192,7 +1254,7 @@
                             <i class="fas fa-motorcycle delivery-icon"></i>
                             <div>
                                 <div class="delivery-text">Entrega</div>
-                                <div class="delivery-price">+ R$ <span id="delivery-fee-modal">5,00</span></div>
+                                <div class="delivery-price">+ R$ <span id="delivery-fee-modal">3,00</span></div>
                             </div>
                         </label>
                     </div>
@@ -1215,35 +1277,49 @@
             </div>
             <div class="modal-buttons">
                 <button class="modal-btn cancel" id="modal-cancel">Cancelar</button>
-                <button class="modal-btn send" id="modal-send">Pagar com PIX</button>
+                <button class="modal-btn send" id="modal-send">Gerar QR Code</button>
             </div>
         </div>
     </div>
 
-    <div class="pix-modal">
-        <div class="modal-content">
-            <h2 class="modal-title">
-                <i class="fas fa-qrcode"></i> Pagamento PIX
+    <!-- Modal de Pagamento com QR Code -->
+    <div class="payment-modal">
+        <div class="payment-content">
+            <h2 class="payment-title">
+                <i class="fas fa-qrcode"></i> Pagamento via PIX
             </h2>
-            <div class="pix-content">
-                <div class="order-info">
-                    <div class="order-id" id="pix-order-id">Pedido: BRO12345</div>
-                    <div id="pix-amount">Valor: R$ 0,00</div>
-                    <div class="countdown" id="pix-countdown">Expira em: 10:00</div>
+            
+            <div class="payment-details">
+                <div class="payment-detail">
+                    <span>Subtotal:</span>
+                    <span id="payment-subtotal">R$ 0,00</span>
                 </div>
-                
-                <img src="" alt="QR Code PIX" class="qrcode" id="pix-qrcode">
-                <p>Escaneie o QR Code com seu app bancário</p>
-                
-                <div class="payment-status" id="payment-status">
-                    <div class="loading"></div>
-                    Aguardando pagamento...
+                <div class="payment-detail">
+                    <span>Taxa de entrega:</span>
+                    <span id="payment-delivery">R$ 0,00</span>
                 </div>
-                
-                <div class="modal-buttons">
-                    <button class="modal-btn cancel" id="pix-cancel">Cancelar Pedido</button>
-                    <button class="modal-btn send" id="simulate-payment" style="display: none;">Simular Pagamento (Teste)</button>
+                <div class="payment-detail">
+                    <span>Total:</span>
+                    <span id="payment-total">R$ 0,00</span>
                 </div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="qr-code-container" id="qr-code-container">
+                <h3>Escaneie o QR Code para pagar</h3>
+                <img id="qr-code-image" class="qr-code" src="" alt="QR Code para pagamento">
+                <div class="payment-info">
+                    <p>Após o pagamento, seu pedido será processado automaticamente.</p>
+                    <p><strong>ID do Pedido:</strong> <span id="order-id"></span></p>
+                </div>
+            </div>
+            
+            <div class="payment-buttons">
+                <button class="payment-btn qr" id="generate-qr">
+                    <i class="fas fa-qrcode"></i> Gerar QR Code PIX
+                </button>
+                <button class="payment-btn cancel" id="payment-cancel">Cancelar</button>
             </div>
         </div>
     </div>
@@ -1266,167 +1342,120 @@
     </div>
 
     <script>
+        // ===== CONFIGURAÇÃO =====
+        const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyXHisRvtTjlVNmS1IKmo3mnS6WqMlHMK9gUnifks1hTA5pmejTP5IF_Mu1skWkZ6Pt/exec';
+
         // ===== CONFIGURAÇÃO DA API =====
         const API_CONFIG = {
-            baseUrl: window.location.hostname.includes("localhost") 
-                ? "http://localhost:3001"                  
-                : "https://api.sosfoodly.com.br",
-            jsonbinConfig: {
-                binId: "68d845acae596e708ffdff50",
-                apiKey: "$2a$10$dk861I8m/eijJrsa4fa8mu8y1h1fZf8LgxilOkEvmxQEiUH6p11o6"
-            }
+            binId: '68d627baae596e708ffc370c',
+            apiKey: '$2a$10$dk861I8m/eijJrsa4fa8mu8y1h1fZf8LgxilOkEvmxQEiUH6p11o6',
+            baseUrl: 'https://api.jsonbin.io/v3/b'
         };
 
-        // Dados globais
-        let menuData = {};
-        let restaurantConfig = {};
+        // Dados iniciais do cardápio (fallback)
+        let menuData = {
+            pizzas: [
+                { id: 1, name: "Margherita", description: "Molho de tomate, mussarela, manjericão fresco", prices: { P: 25.90, M: 35.90, G: 45.90 }, available: true },
+                { id: 2, name: "Calabresa", description: "Molho de tomate, mussarela, calabresa fatiada, cebola", prices: { P: 28.90, M: 38.90, G: 48.90 }, available: true },
+                { id: 3, name: "Quatro Queijos", description: "Molho de tomate, mussarela, provolone, parmesão, gorgonzola", prices: { P: 32.90, M: 42.90, G: 52.90 }, available: true },
+                { id: 4, name: "Portuguesa", description: "Molho de tomate, mussarela, presunto, ovos, cebola, azeitonas", prices: { P: 31.90, M: 41.90, G: 51.90 }, available: true },
+                { id: 5, name: "Frango com Catupiry", description: "Molho de tomate, mussarela, frango desfiado, catupiry", prices: { P: 34.90, M: 44.90, G: 54.90 }, available: true },
+                { id: 6, name: "Pepperoni", description: "Molho de tomate, mussarela, pepperoni fatiado", prices: { P: 35.90, M: 45.90, G: 55.90 }, available: true }
+            ],
+            bebidas: [
+                { id: 7, name: "Coca-Cola 2L", description: "Refrigerante de cola", price: 12.00, available: true },
+                { id: 8, name: "Guaraná Antarctica 2L", description: "Refrigerante de guaraná", price: 10.00, available: true },
+                { id: 9, name: "Suco de Laranja 1L", description: "Suco natural de laranja", price: 15.00, available: true },
+                { id: 10, name: "Água Mineral 500ml", description: "Água mineral sem gás", price: 4.00, available: true },
+                { id: 11, name: "Heineken 600ml", description: "Cerveja Heineken long neck", price: 12.00, available: true },
+                { id: 12, name: "Chopp Artesanal", description: "Chopp artesanal da casa", price: 18.00, available: true }
+            ],
+            sobremesas: [
+                { id: 13, name: "Pudim de Leite", description: "Pudim de leite condensado com calda de caramelo", price: 12.00, available: true },
+                { id: 14, name: "Brownie com Sorvete", description: "Brownie de chocolate com sorvete de creme", price: 18.00, available: true },
+                { id: 15, name: "Mousse de Chocolate", description: "Mousse cremosa de chocolate meio amargo", price: 10.00, available: true },
+                { id: 16, name: "Torta de Limão", description: "Torta de limão com merengue", price: 15.00, available: true },
+                { id: 17, name: "Sorvete Napolitano", description: "Sorvete de chocolate, baunilha e morango", price: 14.00, available: true },
+                { id: 18, name: "Cheesecake de Morango", description: "Cheesecake com calda de morango", price: 20.00, available: true }
+            ],
+            outros: [
+                { id: 19, name: "Hambúrguer Artesanal", description: "Pão brioche, hambúrguer 180g, queijo, alface, tomate", price: 24.90, available: true },
+                { id: 20, name: "Batata Frita", description: "Porção de batata frita crocante com cheddar e bacon", price: 18.90, available: true },
+                { id: 21, name: "Coxinha de Frango", description: "Coxinha de frango com catupiry (unidade)", price: 6.50, available: true },
+                { id: 22, name: "Esfiha de Carne", description: "Esfiha aberta de carne (unidade)", price: 5.50, available: true },
+                { id: 23, name: "Sanduíche Natural", description: "Pão integral, frango, alface, tomate, maionese", price: 15.90, available: true },
+                { id: 24, name: "Pastel de Queijo", description: "Pastel frito com queijo mussarela (unidade)", price: 7.00, available: true }
+            ]
+        };
+
+        // Configurações do restaurante (fallback)
+        let restaurantConfig = {
+            whatsappNumber: "5585986063698",
+            deliveryFee: 3.00,
+            restaurantName: "Brocados.com",
+            openingHours: "18:00-23:00",
+            storeStatus: "open"
+        };
+
+        // Carrinho de compras
         let cart = [];
-        let currentOrder = null;
-        let paymentCheckInterval = null;
-        let countdownInterval = null;
-        let dataRefreshInterval = null;
+        let lastUpdateTime = null;
+        let currentCustomerData = null;
 
-        // ===== SISTEMA DE LOGS =====
-        class AppLogger {
-            static info(message) {
-                console.log(`📱 [APP] ${new Date().toISOString()}: ${message}`);
-            }
-            
-            static error(message, error = null) {
-                console.error(`❌ [APP] ${new Date().toISOString()}: ${message}`, error || '');
-            }
-            
-            static success(message) {
-                console.log(`✅ [APP] ${new Date().toISOString()}: ${message}`);
-            }
-        }
-
-        // ===== FUNÇÕES DA API ROBUSTAS =====
-        async function fetchDataFromAPI(retryCount = 0) {
+        // ===== FUNÇÕES DA API (COM X-MASTER-KEY) =====
+        async function fetchDataFromAPI() {
             try {
-                AppLogger.info(`Buscando dados da API (tentativa ${retryCount + 1})`);
-                
-                const response = await fetch(`${API_CONFIG.baseUrl}/api/public/bin/latest`, {
-                    method: 'GET',
+                const response = await fetch(`${API_CONFIG.baseUrl}/${API_CONFIG.binId}/latest`, {
                     headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    timeout: 10000
+                        'X-Master-Key': API_CONFIG.apiKey,
+                        'Content-Type': 'application/json'
+                    }
                 });
                 
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                if (!response.ok) throw new Error('Erro ao buscar dados da API');
                 
                 const data = await response.json();
-                AppLogger.success('Dados carregados com sucesso');
-                return data;
+                console.log('✅ Dados carregados do JSONBin:', data);
+                return data.record;
             } catch (error) {
-                if (retryCount < 2) {
-                    AppLogger.info(`Tentativa ${retryCount + 1} falhou, tentando novamente...`);
-                    await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
-                    return fetchDataFromAPI(retryCount + 1);
-                }
-                
-                AppLogger.error('Erro ao carregar dados da API, usando dados locais');
-                return getDefaultData();
+                console.warn('❌ Erro ao buscar dados da API, usando dados locais:', error);
+                return { 
+                    menuData: menuData, 
+                    restaurantConfig: restaurantConfig, 
+                    lastUpdated: new Date().toISOString() 
+                };
             }
         }
 
-        function getDefaultData() {
-            return {
-                menuData: {
-                    pizzas: [
-                        { id: 1, name: "Margherita", description: "Molho de tomate, mussarela, manjericão fresco", prices: { P: 25.90, M: 35.90, G: 45.90 }, available: true },
-                        { id: 2, name: "Calabresa", description: "Molho de tomate, mussarela, calabresa fatiada, cebola", prices: { P: 28.90, M: 38.90, G: 48.90 }, available: true }
-                    ],
-                    bebidas: [],
-                    sobremesas: [],
-                    outros: []
-                },
-                restaurantConfig: {
-                    restaurantName: "Brocados.com",
-                    whatsappNumber: "5585986063698",
-                    deliveryFee: 5.00,
-                    openingHours: "18:00-23:00",
-                    storeStatus: "open",
-                    paymentConfig: {
-                        pixKey: "israelgustavo159@gmail.com",
-                        qrExpireMinutes: 10,
-                        redirectWhatsapp: "5585986063698",
-                        paymentProvider: "pix"
-                    },
-                    orderTimes: {
-                        deliveryMinutes: 50,
-                        pickupMinutes: 20
-                    }
-                },
-                orders: [],
-                lastUpdated: new Date().toISOString()
-            };
-        }
-
-        // ✅ CORREÇÃO: Função corrigida para criar pedidos PIX
-        async function createOrder(orderData) {
+        async function updateLocalData() {
             try {
-                AppLogger.info('Criando novo pedido PIX');
+                const apiData = await fetchDataFromAPI();
                 
-                // ✅ CORREÇÃO: Usar endpoint específico para PIX
-                const response = await fetch(`${API_CONFIG.baseUrl}/api/orders/pix`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(orderData)
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                if (apiData.menuData) {
+                    menuData = apiData.menuData;
+                    console.log('✅ Menu data atualizado:', menuData);
+                }
+                if (apiData.restaurantConfig) {
+                    restaurantConfig = apiData.restaurantConfig;
+                    console.log('✅ Configurações atualizadas:', restaurantConfig);
+                }
+                if (apiData.lastUpdated) {
+                    lastUpdateTime = apiData.lastUpdated;
                 }
                 
-                const result = await response.json();
+                updateUIFromConfig();
+                renderAllMenus();
+                showNotification('Cardápio atualizado com sucesso!', 'success');
                 
-                if (!result.success) {
-                    throw new Error(result.error || 'Erro desconhecido ao criar pedido');
-                }
-                
-                AppLogger.success(`Pedido ${result.orderId} criado com sucesso`);
-                return result;
             } catch (error) {
-                AppLogger.error('Erro ao criar pedido', error);
-                throw error; // Propagar o erro para tratamento superior
-            }
-        }
-
-        // ✅ CORREÇÃO: Nova função para verificar status do pagamento
-        async function checkPaymentStatus(orderId) {
-            try {
-                AppLogger.info(`Verificando status do pagamento para pedido ${orderId}`);
-                
-                // ✅ CORREÇÃO: Usar endpoint específico para verificar status
-                const response = await fetch(`${API_CONFIG.baseUrl}/api/orders/${orderId}/status`, {
-                    method: 'GET',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-                const result = await response.json();
-                return result;
-            } catch (error) {
-                AppLogger.error('Erro ao verificar pagamento', error);
-                return null;
+                console.error('❌ Erro ao atualizar dados:', error);
+                showNotification('Erro ao carregar cardápio. Usando dados locais.', 'error');
             }
         }
 
         // ===== FUNÇÕES PRINCIPAIS =====
         function formatPrice(price) {
-            return `R$ ${typeof price === 'number' ? price.toFixed(2) : '0,00'}`.replace('.', ',');
+            return `R$ ${price.toFixed(2).replace('.', ',')}`;
         }
 
         function showNotification(message, type) {
@@ -1445,35 +1474,17 @@
             document.getElementById('delivery-fee-value').textContent = restaurantConfig.deliveryFee.toFixed(2).replace('.', ',');
             document.getElementById('delivery-fee-modal').textContent = restaurantConfig.deliveryFee.toFixed(2).replace('.', ',');
             
-            const statusBadge = document.getElementById('status-badge');
-            const statusText = document.getElementById('status-text');
             const checkoutBtn = document.getElementById('checkout-btn');
-            const connectionStatus = document.getElementById('connection-status');
-            
             if (restaurantConfig.storeStatus === 'closed') {
-                statusBadge.className = 'status-badge closed';
-                statusText.textContent = 'Fechado';
                 checkoutBtn.disabled = true;
                 checkoutBtn.innerHTML = '<i class="fas fa-store-slash"></i> Loja Fechada';
-                connectionStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Loja Fechada';
             } else {
-                statusBadge.className = 'status-badge';
-                statusText.textContent = 'Aberto';
-                checkoutBtn.disabled = cart.length === 0;
-                checkoutBtn.innerHTML = '<i class="fas fa-qrcode"></i> Finalizar com PIX';
-                connectionStatus.innerHTML = '<i class="fas fa-check-circle"></i> Conectado ao sistema';
+                checkoutBtn.disabled = false;
+                checkoutBtn.innerHTML = '<i class="fas fa-shopping-bag"></i> Finalizar Pedido';
             }
         }
 
-        function updateLastUpdateTime() {
-            const lastUpdateElement = document.getElementById('last-update');
-            if (restaurantConfig.lastUpdated) {
-                const lastUpdate = new Date(restaurantConfig.lastUpdated);
-                lastUpdateElement.textContent = `Última atualização: ${lastUpdate.toLocaleString('pt-BR')}`;
-            }
-        }
-
-        // ===== SISTEMA DE CARDÁPIO FLEXÍVEL =====
+        // ===== SISTEMA DE CARDÁPIO =====
         function renderMenuItems(category) {
             const container = document.getElementById(`${category}-items`);
             if (!container) return;
@@ -1492,26 +1503,27 @@
                 const isPizza = item.prices !== undefined;
                 
                 if (isPizza) {
-                    const availableSizes = Object.keys(item.prices || {});
-                    const defaultSize = availableSizes.length > 0 ? availableSizes[0] : 'M';
-                    
                     itemElement.innerHTML = `
                         <div class="item-name">
                             <span>${item.name}</span>
-                            <span class="item-price" id="price-${item.id}">${formatPrice(item.prices[defaultSize])}</span>
+                            <span class="item-price" id="price-${item.id}">${formatPrice(item.prices.M)}</span>
                         </div>
                         <div class="item-description">${item.description}</div>
-                        ${availableSizes.length > 1 ? `
                         <div class="pizza-sizes">
-                            ${availableSizes.map(size => `
-                                <div class="size-option ${size === defaultSize ? 'active' : ''}" data-size="${size}" data-item="${item.id}">
-                                    <span class="size-label">${getSizeLabel(size)}</span>
-                                    <span class="size-price">${formatPrice(item.prices[size])}</span>
-                                </div>
-                            `).join('')}
+                            <div class="size-option active" data-size="P" data-item="${item.id}">
+                                <span class="size-label">Pequena</span>
+                                <span class="size-price">${formatPrice(item.prices.P)}</span>
+                            </div>
+                            <div class="size-option" data-size="M" data-item="${item.id}">
+                                <span class="size-label">Média</span>
+                                <span class="size-price">${formatPrice(item.prices.M)}</span>
+                            </div>
+                            <div class="size-option" data-size="G" data-item="${item.id}">
+                                <span class="size-label">Grande</span>
+                                <span class="size-price">${formatPrice(item.prices.G)}</span>
+                            </div>
                         </div>
-                        ` : ''}
-                        <button class="add-to-cart" data-id="${item.id}" data-size="${defaultSize}" ${!item.available ? 'disabled' : ''}>
+                        <button class="add-to-cart" data-id="${item.id}" data-size="M" ${!item.available ? 'disabled' : ''}>
                             <i class="fas fa-cart-plus"></i> ${item.available ? 'Adicionar ao Carrinho' : 'Indisponível'}
                         </button>
                     `;
@@ -1571,11 +1583,6 @@
             });
         }
 
-        function getSizeLabel(size) {
-            const labels = { 'P': 'Pequena', 'M': 'Média', 'G': 'Grande' };
-            return labels[size] || size;
-        }
-
         function renderAllMenus() {
             renderMenuItems('pizzas');
             renderMenuItems('bebidas');
@@ -1583,7 +1590,7 @@
             renderMenuItems('outros');
         }
 
-        // ===== SISTEMA DE CARRINHO ROBUSTO =====
+        // ===== SISTEMA DE CARRINHO =====
         function addToCart(itemId, size = null) {
             let item = null;
             let categoryFound = null;
@@ -1665,7 +1672,6 @@
             const cartItemsContainer = document.querySelector('.cart-items');
             const totalElement = document.getElementById('total-value');
             const deliveryFeeDisplay = document.getElementById('delivery-fee-display');
-            const checkoutBtn = document.getElementById('checkout-btn');
             
             if (!cartItemsContainer) return;
             
@@ -1675,19 +1681,17 @@
                 cartItemsContainer.innerHTML = '<div class="empty-cart">Seu carrinho está vazio</div>';
                 totalElement.textContent = '0,00';
                 deliveryFeeDisplay.style.display = 'none';
-                checkoutBtn.disabled = true;
                 return;
             }
             
             const { subtotal, total, deliveryType } = calculateTotal();
             
             deliveryFeeDisplay.style.display = deliveryType === 'delivery' ? 'block' : 'none';
-            checkoutBtn.disabled = false;
             
             cart.forEach(item => {
                 const itemTotal = item.price * item.quantity;
                 let itemName = item.name;
-                if (item.size) itemName += ` (${getSizeLabel(item.size)})`;
+                if (item.size) itemName += ` (${item.size})`;
                 
                 const cartItemElement = document.createElement('div');
                 cartItemElement.className = 'cart-item';
@@ -1727,169 +1731,75 @@
             });
         }
 
-        // ✅ CORREÇÃO: Sistema PIX completamente refeito
-        function showPixPayment(orderData) {
-            const modal = document.querySelector('.pix-modal');
-            const orderIdElement = document.getElementById('pix-order-id');
-            const amountElement = document.getElementById('pix-amount');
-            const countdownElement = document.getElementById('pix-countdown');
-            const qrCodeElement = document.getElementById('pix-qrcode');
-            const statusElement = document.getElementById('payment-status');
-            
-            // Atualizar informações do pedido
-            orderIdElement.textContent = `Pedido: ${orderData.orderId}`;
-            amountElement.textContent = `Valor: ${formatPrice(orderData.payment.amount)}`;
-            qrCodeElement.src = orderData.payment.qrCode;
-            
-            // ✅ CORREÇÃO: Configurar countdown correto
-            const expireTime = new Date(orderData.payment.expiresAt).getTime();
-            updateCountdown(expireTime, countdownElement);
-            
-            // Mostrar modal
-            modal.classList.add('active');
-            
-            // ✅ CORREÇÃO: Novo sistema de monitoramento de pagamento
-            startPaymentMonitoring(orderData.orderId, statusElement, modal, expireTime, countdownElement);
-        }
-
-        // ✅ CORREÇÃO: Nova função para monitorar pagamento
-        async function startPaymentMonitoring(orderId, statusElement, modal, expireTime, countdownElement) {
-            let attempts = 0;
-            const maxAttempts = 60; // 5 minutos (5s * 60 = 300s)
-            
-            paymentCheckInterval = setInterval(async () => {
-                try {
-                    attempts++;
-                    const result = await checkPaymentStatus(orderId);
-                    
-                    if (!result) {
-                        AppLogger.error('Erro ao verificar status do pagamento');
-                        return;
-                    }
-                    
-                    // ✅ CORREÇÃO: Tratamento correto dos status
-                    switch (result.status) {
-                        case 'approved':
-                            // Pagamento aprovado - redirecionar para WhatsApp
-                            clearInterval(paymentCheckInterval);
-                            clearInterval(countdownInterval);
-                            
-                            statusElement.innerHTML = '✅ Pagamento confirmado! Redirecionando...';
-                            statusElement.className = 'payment-status success';
-                            
-                            // Redirecionar para WhatsApp após confirmação
-                            setTimeout(() => {
-                                const whatsappUrl = `https://wa.me/${result.whatsappNumber || restaurantConfig.whatsappNumber}?text=${encodeURIComponent(result.whatsappMessage)}`;
-                                window.open(whatsappUrl, '_blank');
-                                
-                                // Limpar carrinho e fechar modal
-                                cart = [];
-                                renderCart();
-                                modal.classList.remove('active');
-                                showNotification('Pedido confirmado! Redirecionado para WhatsApp.', 'success');
-                            }, 2000);
-                            break;
-                            
-                        case 'pending':
-                            // Pagamento pendente - continuar aguardando
-                            statusElement.innerHTML = '<div class="loading"></div> Aguardando pagamento...';
-                            statusElement.className = 'payment-status';
-                            break;
-                            
-                        case 'rejected':
-                            // Pagamento rejeitado - mostrar erro
-                            clearInterval(paymentCheckInterval);
-                            statusElement.innerHTML = '❌ Pagamento recusado. Tente novamente.';
-                            statusElement.className = 'payment-status error';
-                            break;
-                            
-                        default:
-                            // Status desconhecido
-                            statusElement.innerHTML = '<div class="loading"></div> Verificando pagamento...';
-                            statusElement.className = 'payment-status';
-                    }
-                    
-                    // Verificar se excedeu o número máximo de tentativas
-                    if (attempts >= maxAttempts) {
-                        clearInterval(paymentCheckInterval);
-                        statusElement.innerHTML = '⏰ Tempo esgotado. Pedido cancelado.';
-                        statusElement.className = 'payment-status error';
-                    }
-                    
-                } catch (error) {
-                    AppLogger.error('Erro ao verificar pagamento', error);
-                    
-                    if (attempts >= maxAttempts) {
-                        clearInterval(paymentCheckInterval);
-                        statusElement.innerHTML = '❌ Erro ao verificar pagamento. Tente novamente.';
-                        statusElement.className = 'payment-status error';
-                    }
-                }
-            }, 5000); // Verificar a cada 5 segundos
-        }
-
-        function updateCountdown(expireTime, element) {
-            countdownInterval = setInterval(() => {
-                const now = new Date().getTime();
-                const distance = expireTime - now;
-                
-                if (distance < 0) {
-                    clearInterval(countdownInterval);
-                    element.textContent = 'QR Code expirado';
-                    return;
-                }
-                
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                
-                element.textContent = `Expira em: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-            }, 1000);
-        }
-
-        // ✅ CORREÇÃO: Função corrigida para enviar pedido via WhatsApp/PIX
-        async function sendOrderViaWhatsApp(customerData, deliveryType) {
-            const { total, subtotal } = calculateTotal();
-            
-            const orderData = {
-                customer: {
-                    name: customerData.name.trim(),
-                    phone: customerData.phone.replace(/\D/g, '')
-                },
-                items: cart.map(item => ({
-                    id: item.id,
-                    name: item.name,
-                    size: item.size,
-                    price: item.price,
-                    quantity: item.quantity
-                })),
-                deliveryType,
-                address: deliveryType === 'delivery' ? customerData.address.trim() : null,
-                subtotal: subtotal,
-                total: total,
-                paymentMethod: 'pix'
-            };
-
+        // ===== INTEGRAÇÃO COM BACKEND GOOGLE APPS SCRIPT =====
+        async function generateQRCode(customerData, deliveryType) {
             try {
-                AppLogger.info('Enviando pedido para API...');
-                const orderResult = await createOrder(orderData);
+                const { total } = calculateTotal();
                 
-                if (orderResult && orderResult.success) {
-                    currentOrder = orderResult;
-                    
-                    // ✅ CORREÇÃO: Estrutura de dados corrigida
-                    const pixData = {
-                        orderId: orderResult.orderId,
-                        payment: orderResult.payment
-                    };
-                    
-                    showPixPayment(pixData);
-                    return true;
-                } else {
-                    throw new Error('Resposta inválida da API');
+                // Preparar dados para o backend
+                const requestData = {
+                    amount: total,
+                    expiresIn: 3600, // 1 hora em segundos
+                    description: `Pedido ${restaurantConfig.restaurantName}`,
+                    customer: {
+                        name: customerData.name,
+                        cellphone: customerData.phone.replace(/\D/g, ''), // Remover formatação
+                        email: customerData.email,
+                        taxId: customerData.cpf.replace(/\D/g, '') // Remover formatação do CPF
+                    },
+                    metadata: {
+                        externalId: 'ORD' + Date.now()
+                    }
+                };
+                
+                console.log('Enviando dados para backend:', requestData);
+                
+                // Fazer requisição para o backend Google Apps Script
+                const response = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                
+                console.log('Resposta do backend:', data);
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Erro ao gerar QR Code');
                 }
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Verificar se a resposta da API Abacate Pay está nos dados
+                if (!data.data || !data.data.brCodeBase64) {
+                    throw new Error('Resposta inválida da API de pagamento');
+                }
+                
+                // Exibir o QR Code
+                document.getElementById('qr-code-image').src = data.data.brCodeBase64;
+                document.getElementById('qr-code-container').classList.add('active');
+                document.getElementById('order-id').textContent = data.data.id;
+                
+                showNotification('QR Code gerado com sucesso!', 'success');
+                
+                // Salvar dados do pedido
+                currentCustomerData = {
+                    ...customerData,
+                    deliveryType: deliveryType,
+                    orderId: data.data.id,
+                    total: total,
+                    qrCodeData: data.data
+                };
+                
+                return true;
             } catch (error) {
-                AppLogger.error('Erro ao criar pedido PIX', error);
-                showNotification('Erro ao processar pedido. Tente novamente.', 'error');
+                console.error('Erro ao gerar QR Code:', error);
+                showNotification(`Erro ao gerar QR Code: ${error.message}`, 'error');
                 return false;
             }
         }
@@ -1902,6 +1812,16 @@
             
             if (!customerData.phone || !customerData.phone.trim() || customerData.phone.replace(/\D/g, '').length < 10) {
                 showNotification('Por favor, informe um número de WhatsApp válido.', 'error');
+                return false;
+            }
+            
+            if (!customerData.email || !customerData.email.trim() || !customerData.email.includes('@')) {
+                showNotification('Por favor, informe um email válido.', 'error');
+                return false;
+            }
+            
+            if (!customerData.cpf || !customerData.cpf.trim() || customerData.cpf.replace(/\D/g, '').length !== 11) {
+                showNotification('Por favor, informe um CPF válido.', 'error');
                 return false;
             }
             
@@ -1923,67 +1843,30 @@
             return true;
         }
 
-        // ===== SISTEMA DE ATUALIZAÇÃO AUTOMÁTICA =====
-        async function loadInitialData() {
-            try {
-                AppLogger.info('Carregando dados iniciais...');
-                const apiData = await fetchDataFromAPI();
-                
-                if (apiData.menuData) {
-                    menuData = apiData.menuData;
-                }
-                if (apiData.restaurantConfig) {
-                    restaurantConfig = apiData.restaurantConfig;
-                }
-                
-                updateUIFromConfig();
-                updateLastUpdateTime();
-                renderAllMenus();
-                
-                AppLogger.success('Dados carregados e interface atualizada');
-                
-            } catch (error) {
-                AppLogger.error('Erro ao carregar dados', error);
-                showNotification('Erro ao carregar cardápio. Usando dados locais.', 'error');
-            }
-        }
-
-        function setupAutoRefresh() {
-            // Atualizar dados a cada 30 segundos
-            dataRefreshInterval = setInterval(loadInitialData, 30000);
-        }
-
-        // ===== INICIALIZAÇÃO ROBUSTA =====
-        document.addEventListener('DOMContentLoaded', async function() {
-            AppLogger.info('🚀 Iniciando cardápio digital...');
+        function updatePaymentDetails() {
+            const { subtotal, total, deliveryType } = calculateTotal();
             
-            try {
-                // Carregar dados iniciais
-                await loadInitialData();
-                renderCart();
-                
-                // Configurar atualização automática
-                setupAutoRefresh();
-                
-                // Configurar event listeners
-                setupEventListeners();
-                
-                AppLogger.success('✅ Cardápio digital iniciado com sucesso!');
-                showNotification('Sistema carregado com sucesso!', 'success');
-                
-            } catch (error) {
-                AppLogger.error('Erro crítico na inicialização', error);
-                showNotification('Erro ao iniciar o sistema. Recarregue a página.', 'error');
-            }
-        });
+            document.getElementById('payment-subtotal').textContent = formatPrice(subtotal);
+            document.getElementById('payment-delivery').textContent = deliveryType === 'delivery' ? formatPrice(restaurantConfig.deliveryFee) : 'R$ 0,00';
+            document.getElementById('payment-total').textContent = formatPrice(total);
+        }
 
-        function setupEventListeners() {
-            // Admin panel
+        // ===== INICIALIZAÇÃO =====
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Iniciando cardápio digital...');
+            
+            // Carregar dados iniciais
+            await updateLocalData();
+            renderCart();
+            
+            // Atualizar dados a cada 30 segundos
+            setInterval(updateLocalData, 30000);
+            
+            // Event listeners para interface
             document.getElementById('adminToggle').addEventListener('click', function() {
                 document.getElementById('adminStatus').classList.toggle('active');
             });
 
-            // Categorias do menu
             document.querySelectorAll('.category-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
@@ -1993,7 +1876,6 @@
                 });
             });
             
-            // Botão de checkout
             document.getElementById('checkout-btn').addEventListener('click', function() {
                 if (cart.length === 0) {
                     showNotification('Seu carrinho está vazio! Adicione itens antes de finalizar o pedido.', 'error');
@@ -2002,12 +1884,10 @@
                 document.querySelector('.whatsapp-modal').classList.add('active');
             });
             
-            // Botão flutuante do WhatsApp
             document.querySelector('.whatsapp-float').addEventListener('click', function() {
                 document.querySelector('.whatsapp-modal').classList.add('active');
             });
             
-            // Modal de checkout
             document.getElementById('modal-cancel').addEventListener('click', function() {
                 document.querySelector('.whatsapp-modal').classList.remove('active');
             });
@@ -2017,33 +1897,54 @@
                 const customerData = {
                     name: document.getElementById('customer-name').value,
                     phone: document.getElementById('customer-phone').value,
+                    email: document.getElementById('customer-email').value,
+                    cpf: document.getElementById('customer-cpf').value,
                     address: document.getElementById('customer-address').value
                 };
                 
                 if (validateForm(customerData, deliveryType)) {
-                    // Mostrar loading no botão
-                    const sendBtn = this;
-                    const originalText = sendBtn.innerHTML;
-                    sendBtn.innerHTML = '<div class="loading"></div> Processando...';
-                    sendBtn.disabled = true;
+                    // Salvar dados do cliente
+                    currentCustomerData = {
+                        ...customerData,
+                        deliveryType: deliveryType
+                    };
                     
-                    const success = await sendOrderViaWhatsApp(customerData, deliveryType);
+                    // Fechar modal de pedido e abrir modal de pagamento
+                    document.querySelector('.whatsapp-modal').classList.remove('active');
+                    document.querySelector('.payment-modal').classList.add('active');
                     
-                    // Restaurar botão
-                    sendBtn.innerHTML = originalText;
-                    sendBtn.disabled = false;
-                    
-                    if (success) {
-                        document.querySelector('.whatsapp-modal').classList.remove('active');
-                        // Limpar formulário
-                        document.getElementById('customer-name').value = '';
-                        document.getElementById('customer-phone').value = '';
-                        document.getElementById('customer-address').value = '';
-                    }
+                    // Atualizar detalhes do pagamento
+                    updatePaymentDetails();
                 }
             });
             
-            // Opções de entrega
+            document.getElementById('generate-qr').addEventListener('click', async function() {
+                if (!currentCustomerData) {
+                    showNotification('Erro: dados do cliente não encontrados.', 'error');
+                    return;
+                }
+                
+                // Mostrar loading
+                this.innerHTML = '<i class="fas fa-spinner loading"></i> Gerando QR Code...';
+                this.disabled = true;
+                
+                const success = await generateQRCode(currentCustomerData, currentCustomerData.deliveryType);
+                
+                if (success) {
+                    this.innerHTML = '<i class="fas fa-check"></i> QR Code Gerado';
+                } else {
+                    this.innerHTML = '<i class="fas fa-qrcode"></i> Gerar QR Code PIX';
+                    this.disabled = false;
+                }
+            });
+            
+            document.getElementById('payment-cancel').addEventListener('click', function() {
+                document.querySelector('.payment-modal').classList.remove('active');
+                document.getElementById('qr-code-container').classList.remove('active');
+                document.getElementById('generate-qr').disabled = false;
+                document.getElementById('generate-qr').innerHTML = '<i class="fas fa-qrcode"></i> Gerar QR Code PIX';
+            });
+            
             document.querySelectorAll('input[name="delivery-type"]').forEach(radio => {
                 radio.addEventListener('change', function() {
                     document.getElementById('address-group').style.display = this.value === 'delivery' ? 'block' : 'none';
@@ -2051,53 +1952,32 @@
                 });
             });
             
-            // Fechar modais
-            document.querySelectorAll('.whatsapp-modal, .pix-modal').forEach(modal => {
-                modal.addEventListener('click', function(e) {
-                    if (e.target === this) {
-                        this.classList.remove('active');
-                        if (this.classList.contains('pix-modal')) {
-                            clearInterval(paymentCheckInterval);
-                            clearInterval(countdownInterval);
-                        }
-                    }
-                });
+            document.querySelector('.whatsapp-modal').addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('active');
             });
             
-            // Cancelar pedido PIX
-            document.getElementById('pix-cancel').addEventListener('click', function() {
-                document.querySelector('.pix-modal').classList.remove('active');
-                clearInterval(paymentCheckInterval);
-                clearInterval(countdownInterval);
-                showNotification('Pedido cancelado.', 'error');
+            document.querySelector('.payment-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                    document.getElementById('qr-code-container').classList.remove('active');
+                    document.getElementById('generate-qr').disabled = false;
+                    document.getElementById('generate-qr').innerHTML = '<i class="fas fa-qrcode"></i> Gerar QR Code PIX';
+                }
             });
             
-            // Fechar modais com ESC
+            // Fechar modal com ESC
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
-                    document.querySelectorAll('.whatsapp-modal, .pix-modal').forEach(modal => {
-                        modal.classList.remove('active');
-                    });
-                    clearInterval(paymentCheckInterval);
-                    clearInterval(countdownInterval);
+                    document.querySelector('.whatsapp-modal').classList.remove('active');
+                    document.querySelector('.payment-modal').classList.remove('active');
+                    document.getElementById('qr-code-container').classList.remove('active');
+                    document.getElementById('generate-qr').disabled = false;
+                    document.getElementById('generate-qr').innerHTML = '<i class="fas fa-qrcode"></i> Gerar QR Code PIX';
                 }
             });
-
-            // Recarregar dados manualmente com F5
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'F5') {
-                    e.preventDefault();
-                    loadInitialData();
-                    showNotification('Dados recarregados!', 'success');
-                }
-            });
-        }
-
-        // Graceful shutdown
-        window.addEventListener('beforeunload', function() {
-            if (paymentCheckInterval) clearInterval(paymentCheckInterval);
-            if (countdownInterval) clearInterval(countdownInterval);
-            if (dataRefreshInterval) clearInterval(dataRefreshInterval);
+            
+            console.log('✅ Cardápio digital iniciado com sucesso!');
+            console.log('🔗 Backend URL:', BACKEND_URL);
         });
     </script>
 </body>
