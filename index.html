@@ -1731,81 +1731,165 @@
             });
         }
 
-        // ===== INTEGRAÇÃO COM BACKEND GOOGLE APPS SCRIPT (SOLUÇÃO CORS) =====
-        function generateQRCode(customerData, deliveryType) {
-            return new Promise((resolve, reject) => {
-                try {
-                    const { total } = calculateTotal();
-                    
-                    // Preparar dados para o backend
-                    const requestData = {
-                        amount: total,
-                        expiresIn: 3600, // 1 hora em segundos
-                        description: `Pedido ${restaurantConfig.restaurantName}`,
-                        customer: {
-                            name: customerData.name,
-                            cellphone: customerData.phone.replace(/\D/g, ''), // Remover formatação
-                            email: customerData.email,
-                            taxId: customerData.cpf.replace(/\D/g, '') // Remover formatação do CPF
-                        },
-                        metadata: {
-                            externalId: 'ORD' + Date.now()
-                        }
-                    };
-                    
-                    console.log('Enviando dados para backend:', requestData);
-                    
-                    // USAR XMLHttpRequest PARA EVITAR PROBLEMAS DE CORS
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('POST', BACKEND_URL, true);
-                    xhr.setRequestHeader('Content-Type', 'application/json');
-                    
-                    xhr.onreadystatechange = function() {
-                        if (xhr.readyState === 4) {
-                            if (xhr.status === 200) {
-                                try {
-                                    const data = JSON.parse(xhr.responseText);
-                                    console.log('Resposta do backend:', data);
-                                    
-                                    if (data.error) {
-                                        throw new Error(data.error);
-                                    }
-                                    
-                                    // Verificar se a resposta da API Abacate Pay está nos dados
-                                    if (!data.data || !data.data.brCodeBase64) {
-                                        throw new Error('Resposta inválida da API de pagamento');
-                                    }
-                                    
-                                    // Exibir o QR Code
-                                    document.getElementById('qr-code-image').src = data.data.brCodeBase64;
-                                    document.getElementById('qr-code-container').classList.add('active');
-                                    document.getElementById('order-id').textContent = data.data.id;
-                                    
-                                    showNotification('QR Code gerado com sucesso!', 'success');
-                                    
-                                    // Salvar dados do pedido
-                                    currentCustomerData = {
-                                        ...customerData,
-                                        deliveryType: deliveryType,
-                                        orderId: data.data.id,
-                                        total: total,
-                                        qrCodeData: data.data
-                                    };
-                                    
-                                    resolve(true);
-                                } catch (error) {
-                                    console.error('Erro ao processar resposta:', error);
-                                    showNotification(`Erro: ${error.message}`, 'error');
-                                    reject(error);
-                                }
-                            } else {
-                                const error = new Error(`Erro HTTP ${xhr.status}: ${xhr.statusText}`);
-                                console.error('Erro na requisição:', error);
-                                showNotification(`Erro de conexão: ${xhr.status}`, 'error');
-                                reject(error);
-                            }
-                        }
-                    };
+        // ===== INTEGRAÇÃO COM BACKEND VIA JSONP (SOLUÇÃO CORS) =====
+function generateQRCode(customerData, deliveryType) {
+    return new Promise((resolve, reject) => {
+        try {
+            const { total } = calculateTotal();
+            
+            // Preparar dados para o backend
+            const requestData = {
+                amount: total,
+                expiresIn: 3600,
+                description: `Pedido ${restaurantConfig.restaurantName}`,
+                customer: {
+                    name: customerData.name,
+                    cellphone: customerData.phone.replace(/\D/g, ''),
+                    email: customerData.email,
+                    taxId: customerData.cpf.replace(/\D/g, '')
+                },
+                metadata: {
+                    externalId: 'ORD' + Date.now()
+                }
+            };
+            
+            console.log('Enviando dados via JSONP:', requestData);
+            
+            // SOLUÇÃO JSONP - Criar um script temporário
+            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            const script = document.createElement('script');
+            
+            // Configurar a função de callback global
+            window[callbackName] = function(response) {
+                // Limpar após uso
+                delete window[callbackName];
+                document.body.removeChild(script);
+                
+                console.log('Resposta JSONP:', response);
+                
+                if (response.error) {
+                    showNotification(`Erro: ${response.error}`, 'error');
+                    reject(new Error(response.error));
+                    return;
+                }
+                
+                if (!response.data || !response.data.brCodeBase64) {
+                    showNotification('Resposta inválida da API', 'error');
+                    reject(new Error('Resposta inválida'));
+                    return;
+                }
+                
+                // Exibir o QR Code
+                document.getElementById('qr-code-image').src = response.data.brCodeBase64;
+                document.getElementById('qr-code-container').classList.add('active');
+                document.getElementById('order-id').textContent = response.data.id;
+                
+                showNotification('QR Code gerado com sucesso!', 'success');
+                
+                // Salvar dados do pedido
+                currentCustomerData = {
+                    ...customerData,
+                    deliveryType: deliveryType,
+                    orderId: response.data.id,
+                    total: total,
+                    qrCodeData: response.data
+                };
+                
+                resolve(true);
+            };
+            
+            // Criar URL com JSONP
+            const url = new URL(BACKEND_URL);
+            url.searchParams.set('callback', callbackName);
+            
+            // Usar POST via form submission simulado
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url.toString();
+            form.style.display = 'none';
+            
+            const input = document.createElement('input');
+            input.name = 'payload';
+            input.value = JSON.stringify(requestData);
+            form.appendChild(input);
+            
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+            
+            // Timeout para evitar requisições pendentes
+            setTimeout(() => {
+                if (window[callbackName]) {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    showNotification('Tempo limite excedido', 'error');
+                    reject(new Error('Timeout'));
+                }
+            }, 30000);
+            
+        } catch (error) {
+            console.error('Erro ao gerar QR Code:', error);
+            showNotification(`Erro ao gerar QR Code: ${error.message}`, 'error');
+            reject(error);
+        }
+    });
+}
+                
+                // Exibir o QR Code
+                document.getElementById('qr-code-image').src = response.data.brCodeBase64;
+                document.getElementById('qr-code-container').classList.add('active');
+                document.getElementById('order-id').textContent = response.data.id;
+                
+                showNotification('QR Code gerado com sucesso!', 'success');
+                
+                // Salvar dados do pedido
+                currentCustomerData = {
+                    ...customerData,
+                    deliveryType: deliveryType,
+                    orderId: response.data.id,
+                    total: total,
+                    qrCodeData: response.data
+                };
+                
+                resolve(true);
+            };
+            
+            // Criar URL com JSONP
+            const url = new URL(BACKEND_URL);
+            url.searchParams.set('callback', callbackName);
+            
+            // Usar POST via form submission simulado
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url.toString();
+            form.style.display = 'none';
+            
+            const input = document.createElement('input');
+            input.name = 'payload';
+            input.value = JSON.stringify(requestData);
+            form.appendChild(input);
+            
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+            
+            // Timeout para evitar requisições pendentes
+            setTimeout(() => {
+                if (window[callbackName]) {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    showNotification('Tempo limite excedido', 'error');
+                    reject(new Error('Timeout'));
+                }
+            }, 30000);
+            
+        } catch (error) {
+            console.error('Erro ao gerar QR Code:', error);
+            showNotification(`Erro ao gerar QR Code: ${error.message}`, 'error');
+            reject(error);
+        }
+    });
+}
                     
                     xhr.onerror = function() {
                         const error = new Error('Erro de rede ao conectar com o servidor');
